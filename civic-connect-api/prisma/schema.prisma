@@ -1,0 +1,58 @@
+// civic-connect-api/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CITIZEN
+  OFFICER
+  ADMIN
+}
+
+enum ComplaintStatus {
+  PENDING
+  VERIFIED
+  RESOLVED
+  REJECTED
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password_hash String
+  role          Role        @default(CITIZEN)
+  created_at    DateTime    @default(now())
+  
+  complaints    Complaint[]
+}
+
+model Department {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  
+  complaints  Complaint[]
+}
+
+model Complaint {
+  id            String          @id @default(uuid())
+  title         String
+  description   String
+  status        ComplaintStatus @default(PENDING)
+  priority      String          @default("LOW") // Consider enum for HIGH, MEDIUM, LOW
+  location_lat  Float?
+  location_lng  Float?
+  created_at    DateTime        @default(now())
+
+  citizen_id    String
+  citizen       User            @relation(fields: [citizen_id], references: [id])
+  
+  department_id String
+  department    Department      @relation(fields: [department_id], references: [id])
+}
