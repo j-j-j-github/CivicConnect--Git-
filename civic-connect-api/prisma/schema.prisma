@@ -2,6 +2,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -30,6 +31,8 @@ model User {
   
   complaints    Complaint[]
   citizenProfile CitizenProfile?
+  feedbacks     Feedback[]
+  notifications Notification[]
 }
 
 model CitizenProfile {
@@ -56,6 +59,7 @@ model Complaint {
   priority      String          @default("LOW") // Consider enum for HIGH, MEDIUM, LOW
   location_lat  Float?
   location_lng  Float?
+  media_urls    String[]        @default([])
   created_at    DateTime        @default(now())
 
   citizen_id    String
@@ -63,4 +67,29 @@ model Complaint {
   
   department_id String
   department    Department      @relation(fields: [department_id], references: [id])
+
+  feedback      Feedback?
+}
+
+model Feedback {
+  id            String      @id @default(uuid())
+  rating        Int
+  comments      String?
+  created_at    DateTime    @default(now())
+
+  complaint_id  String      @unique
+  complaint     Complaint   @relation(fields: [complaint_id], references: [id])
+
+  citizen_id    String
+  citizen       User        @relation(fields: [citizen_id], references: [id])
+}
+
+model Notification {
+  id            String      @id @default(uuid())
+  message       String
+  is_read       Boolean     @default(false)
+  created_at    DateTime    @default(now())
+
+  user_id       String
+  user          User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }

@@ -67,12 +67,18 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[#1E3A8A]">
-            Join CivicConnect
+        <div className="text-center flex flex-col items-center">
+          <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center shadow-md mb-4">
+            <span className="text-white font-bold text-3xl">C</span>
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
+            Citizen Registration
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Create an account to start reporting issues.
+          <p className="mt-2 text-sm text-gray-500 uppercase font-semibold tracking-wider">
+            Department of Civic Affairs
+          </p>
+          <p className="mt-4 text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-md border border-blue-100">
+            Create a unified account to access civic services.
           </p>
         </div>
 
