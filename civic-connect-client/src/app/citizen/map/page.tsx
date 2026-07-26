@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { MapPin } from 'lucide-react';
 
@@ -14,14 +14,27 @@ const center = {
   lng: -74.0060
 };
 
-// Mock incidents for the map
-const incidents = [
+// Mock initial incidents for the map
+const initialIncidents = [
   { id: '1', lat: 40.7128, lng: -74.0060, title: 'Pothole on Main St' },
   { id: '2', lat: 40.7150, lng: -74.0020, title: 'Broken Streetlight' },
-  { id: '3', lat: 40.7100, lng: -74.0100, title: 'Water Leakage' }
 ];
 
 export default function MapPage() {
+  const [incidents, setIncidents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('civic_complaints');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Filter out complaints without coordinates
+      const mapped = parsed.filter((c: any) => c.lat && c.lng);
+      setIncidents(mapped.length > 0 ? mapped : initialIncidents);
+    } else {
+      setIncidents(initialIncidents);
+    }
+  }, []);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
