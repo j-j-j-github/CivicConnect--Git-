@@ -87,7 +87,7 @@ export default function NewComplaintPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Large pothole causing traffic"
                 required
-                className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
+                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
               />
             </div>
 
@@ -100,7 +100,7 @@ export default function NewComplaintPage() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
-                className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
+                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
               >
                 <option value="">Select a category...</option>
                 <option value="Public Works">Public Works (PWD)</option>
@@ -122,7 +122,7 @@ export default function NewComplaintPage() {
                 rows={4}
                 placeholder="Provide as much detail as possible..."
                 required
-                className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
+                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
               ></textarea>
             </div>
             
@@ -136,7 +136,7 @@ export default function NewComplaintPage() {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Click the map below to auto-fill"
-                className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
+                className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
               />
             </div>
           </div>
