@@ -1,7 +1,7 @@
 // civic-connect-api/prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
@@ -23,73 +23,99 @@ enum ComplaintStatus {
 }
 
 model User {
-  id            String      @id @default(uuid())
-  email         String      @unique
+  id            String   @id @default(uuid())
+  email         String   @unique
   password_hash String
-  role          Role        @default(CITIZEN)
-  created_at    DateTime    @default(now())
-  
-  complaints    Complaint[]
-  citizenProfile CitizenProfile?
-  feedbacks     Feedback[]
-  notifications Notification[]
+  role          Role     @default(CITIZEN)
+  created_at    DateTime @default(now())
+
+  complaints          Complaint[]
+  citizenProfile      CitizenProfile?
+  feedbacks           Feedback[]
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model CitizenProfile {
-  id         String   @id @default(uuid())
-  user_id    String   @unique
-  full_name  String
-  
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid())
+  user_id   String  @unique
+  full_name String
+  phone     String?
+  address   String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Department {
-  id          String      @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String?
-  
-  complaints  Complaint[]
+
+  complaints Complaint[]
 }
 
 model Complaint {
-  id            String          @id @default(uuid())
-  title         String
-  description   String
-  status        ComplaintStatus @default(PENDING)
-  priority      String          @default("LOW") // Consider enum for HIGH, MEDIUM, LOW
-  location_lat  Float?
-  location_lng  Float?
-  media_urls    String[]        @default([])
-  created_at    DateTime        @default(now())
+  id           String          @id @default(uuid())
+  title        String
+  description  String
+  status       ComplaintStatus @default(PENDING)
+  priority     String          @default("LOW") // Consider enum for HIGH, MEDIUM, LOW
+  location_lat Float?
+  location_lng Float?
+  media_urls   String[]        @default([])
+  created_at   DateTime        @default(now())
 
-  citizen_id    String
-  citizen       User            @relation(fields: [citizen_id], references: [id])
-  
+  citizen_id String
+  citizen    User   @relation(fields: [citizen_id], references: [id])
+
   department_id String
-  department    Department      @relation(fields: [department_id], references: [id])
+  department    Department @relation(fields: [department_id], references: [id])
 
-  feedback      Feedback?
+  feedback                 Feedback?
+  complaintStatusHistories ComplaintStatusHistory[]
 }
 
 model Feedback {
-  id            String      @id @default(uuid())
-  rating        Int
-  comments      String?
-  created_at    DateTime    @default(now())
+  id         String   @id @default(uuid())
+  rating     Int
+  comments   String?
+  created_at DateTime @default(now())
 
-  complaint_id  String      @unique
-  complaint     Complaint   @relation(fields: [complaint_id], references: [id])
+  complaint_id String    @unique
+  complaint    Complaint @relation(fields: [complaint_id], references: [id])
 
-  citizen_id    String
-  citizen       User        @relation(fields: [citizen_id], references: [id])
+  citizen_id String
+  citizen    User   @relation(fields: [citizen_id], references: [id])
 }
 
 model Notification {
-  id            String      @id @default(uuid())
-  message       String
-  is_read       Boolean     @default(false)
-  created_at    DateTime    @default(now())
+  id         String   @id @default(uuid())
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
 
-  user_id       String
-  user          User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  user_id   String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model ComplaintStatusHistory {
+  id          String          @id @default(uuid())
+  complaintId String
+  status      ComplaintStatus
+  note        String?
+  changedById String?
+  createdAt   DateTime        @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
 }

@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Bell, UserCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Bell, UserCircle, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { fetchApi } from '../../lib/api';
 
 export default function CitizenLayout({
   children,
@@ -10,6 +11,37 @@ export default function CitizenLayout({
   children: React.ReactNode;
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadNotifications = async () => {
+    try {
+      const data = await fetchApi('/notifications');
+      if (data) {
+        setNotifications(data);
+        setUnreadCount(data.filter((n: any) => !n.is_read).length);
+      }
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+    // In a real app we'd use WebSockets/SSE for real-time updates.
+    // For capstone, polling every 30s is acceptable if needed, but we'll stick to mount.
+  }, []);
+
+  const markAsRead = async (id: string) => {
+    try {
+      await fetchApi(`/notifications/${id}/read`, { method: 'PATCH' });
+      // Optimistic update
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to mark notification as read', error);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9FAFB] font-sans">
@@ -46,22 +78,38 @@ export default function CitizenLayout({
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <Bell size={20} />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border border-white text-[10px] text-white flex items-center justify-center font-bold">
+                {unreadCount}
+              </span>
+            )}
           </button>
           
           {/* Notifications Popover */}
           {showNotifications && (
             <div className="absolute top-10 right-10 w-80 bg-white border border-gray-100 shadow-lg rounded-xl overflow-hidden z-50">
-              <div className="p-4 border-b border-gray-100 font-bold text-gray-900">Notifications</div>
+              <div className="p-4 border-b border-gray-100 font-bold text-gray-900 flex justify-between items-center">
+                Notifications
+                <button onClick={() => loadNotifications()} className="text-xs text-blue-600 hover:underline">Refresh</button>
+              </div>
               <div className="max-h-64 overflow-y-auto">
-                <div className="p-4 border-b border-gray-50 hover:bg-gray-50 text-sm">
-                  <p className="font-semibold text-gray-900">Welcome to CivicConnect!</p>
-                  <p className="text-gray-500 mt-1">Thank you for joining our platform to improve the city.</p>
-                </div>
-                <div className="p-4 hover:bg-gray-50 text-sm">
-                  <p className="font-semibold text-gray-900">Report #1 Update</p>
-                  <p className="text-gray-500 mt-1">Your report for "Pothole on Main St" is now In Progress.</p>
-                </div>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-500">No notifications yet.</div>
+                ) : (
+                  notifications.map((n) => (
+                    <div key={n.id} className={`p-4 border-b border-gray-50 text-sm flex justify-between items-start ${!n.is_read ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}>
+                      <div>
+                        <p className={`text-gray-900 ${!n.is_read ? 'font-semibold' : ''}`}>{n.message}</p>
+                        <p className="text-gray-400 text-xs mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                      </div>
+                      {!n.is_read && (
+                        <button onClick={() => markAsRead(n.id)} className="text-blue-600 hover:text-blue-800 flex-shrink-0 ml-2" title="Mark as read">
+                          <Check size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

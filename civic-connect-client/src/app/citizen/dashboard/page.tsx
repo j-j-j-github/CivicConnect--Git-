@@ -2,50 +2,50 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Lightbulb, ArrowRight, Clock, CheckCircle, MapPin, X } from 'lucide-react';
+import { AlertTriangle, Lightbulb, ArrowRight, Clock, CheckCircle, MapPin, X, Loader2 } from 'lucide-react';
+import { fetchApi } from '../../../lib/api';
 
 export default function CitizenDashboard() {
   const [complaints, setComplaints] = useState<any[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [profileName, setProfileName] = useState('Citizen');
 
   useEffect(() => {
-    // Default initial mock data if empty
-    const defaultData = [
-      { 
-        id: '1', 
-        title: 'Pothole on Main St', 
-        date: 'Oct 12, 2023', 
-        status: 'In Progress', 
-        category: 'Public Works',
-        description: 'Large pothole causing severe traffic delays and potential damage to vehicles.',
-        address: '123 Main St, City Center',
-        lat: 40.7128, lng: -74.0060
-      },
-      { 
-        id: '2', 
-        title: 'Broken Streetlight', 
-        date: 'Oct 05, 2023', 
-        status: 'Resolved', 
-        category: 'Electricity',
-        description: 'Streetlight completely out at intersection, making it very dark at night.',
-        address: '45 Elm St, Westside',
-        lat: 40.7150, lng: -74.0020
-      },
-    ];
-
-    const saved = localStorage.getItem('civic_complaints');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.length > 0) {
-        setComplaints(parsed);
-      } else {
-        setComplaints(defaultData);
-        localStorage.setItem('civic_complaints', JSON.stringify(defaultData));
+    const loadData = async () => {
+      try {
+        const [complaintsData, profileData] = await Promise.all([
+          fetchApi('/complaints/my'),
+          fetchApi('/citizens/profile')
+        ]);
+        
+        if (complaintsData) {
+          // Map backend format to frontend format
+          const mapped = complaintsData.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            date: new Date(c.created_at).toLocaleDateString(),
+            status: c.status === 'PENDING' ? 'Pending' : c.status === 'IN_PROGRESS' ? 'In Progress' : 'Resolved',
+            category: c.department?.name || 'General',
+            description: c.description,
+            address: `Lat: ${c.location_lat}, Lng: ${c.location_lng}`, // Basic mapping, can be improved with reverse geocoding
+            lat: c.location_lat,
+            lng: c.location_lng
+          }));
+          setComplaints(mapped);
+        }
+        
+        if (profileData && profileData.citizenProfile) {
+          setProfileName(profileData.citizenProfile.full_name || 'Citizen');
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard data', error);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setComplaints(defaultData);
-      localStorage.setItem('civic_complaints', JSON.stringify(defaultData));
-    }
+    };
+    
+    loadData();
   }, []);
 
   const getIcon = (status: string) => {
@@ -57,13 +57,17 @@ export default function CitizenDashboard() {
   const activeReportsCount = complaints.filter(c => c.status !== 'Resolved').length;
   const resolvedCount = complaints.filter(c => c.status === 'Resolved').length;
 
+  if (loading) {
+    return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-blue-600 h-8 w-8" /></div>;
+  }
+
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 relative">
       
       {/* Greeting */}
       <div>
         <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-          Hello, Jeeval <span className="text-3xl">👋</span>
+          Hello, {profileName.split(' ')[0]} <span className="text-3xl">👋</span>
         </h1>
         <p className="text-gray-500 mt-2 text-lg">Here's your civic engagement overview for today.</p>
       </div>

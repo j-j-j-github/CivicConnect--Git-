@@ -1,18 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { MapPin } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
-const mapContainerStyle = {
-  width: '100%',
-  height: '600px'
-};
-
-const center = {
-  lat: 40.7128, // Default center (e.g. New York or user's city)
-  lng: -74.0060
-};
+// Dynamically import Leaflet Map to avoid SSR window errors
+const LiveMap = dynamic(() => import('../../../components/map/LiveMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[600px] bg-gray-100 animate-pulse rounded-xl flex items-center justify-center text-gray-400">
+      Loading Map...
+    </div>
+  ),
+});
 
 // Mock initial incidents for the map
 const initialIncidents = [
@@ -35,11 +35,6 @@ export default function MapPage() {
     }
   }, []);
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
-  });
-
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center gap-3">
@@ -53,38 +48,7 @@ export default function MapPage() {
       </div>
 
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {isLoaded ? (
-          <div className="rounded-xl overflow-hidden border border-gray-200">
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              center={center}
-              zoom={13}
-              options={{
-                disableDefaultUI: false,
-                zoomControl: true,
-                styles: [
-                  {
-                    featureType: 'poi',
-                    elementType: 'labels',
-                    stylers: [{ visibility: 'off' }]
-                  }
-                ]
-              }}
-            >
-              {incidents.map((incident) => (
-                <Marker
-                  key={incident.id}
-                  position={{ lat: incident.lat, lng: incident.lng }}
-                  title={incident.title}
-                />
-              ))}
-            </GoogleMap>
-          </div>
-        ) : (
-          <div className="w-full h-[600px] bg-gray-100 animate-pulse rounded-xl flex items-center justify-center text-gray-400">
-            Loading Map...
-          </div>
-        )}
+        <LiveMap incidents={incidents} />
       </div>
     </div>
   );
