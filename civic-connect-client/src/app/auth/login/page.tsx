@@ -20,6 +20,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // Mock Admin Authentication
+      if (email.trim() === 'admin@cc' && password.trim() === 'Admin@123') {
+        Cookies.set('token', 'mock_admin_token', { expires: 1, path: '/' });
+        router.push('/admin');
+        return;
+      }
+
       const res = await fetch('http://localhost:3001/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,7 +41,7 @@ export default function LoginPage() {
       Cookies.set('token', data.access_token, { expires: 1, path: '/' });
       
       if (data.user.role === 'ADMIN') {
-        router.push('/admin/dashboard');
+        router.push('/admin');
       } else if (data.user.role === 'OFFICER') {
         router.push('/officer/dashboard');
       } else {
