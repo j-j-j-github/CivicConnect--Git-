@@ -1,0 +1,122 @@
+// civic-connect-api/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CITIZEN
+  OFFICER
+  ADMIN
+}
+
+enum ComplaintStatus {
+  PENDING
+  VERIFIED
+  RESOLVED
+  REJECTED
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password_hash String
+  role          Role        @default(CITIZEN)
+  created_at    DateTime    @default(now())
+  
+  complaints    Complaint[]
+  citizenProfile CitizenProfile?
+  feedbacks     Feedback[]
+  notifications Notification[]
+
+  department_id String?
+  department    Department? @relation(fields: [department_id], references: [id])
+
+  internal_notes      InternalNote[]
+  assigned_complaints Complaint[]    @relation("AssignedOfficer")
+}
+
+model CitizenProfile {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  full_name  String
+  
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  
+  complaints  Complaint[]
+  officers    User[]
+}
+
+model Complaint {
+  id            String          @id @default(uuid())
+  title         String
+  description   String
+  status        ComplaintStatus @default(PENDING)
+  priority      String          @default("LOW") // Consider enum for HIGH, MEDIUM, LOW
+  location_lat  Float?
+  location_lng  Float?
+  media_urls    String[]        @default([])
+  created_at    DateTime        @default(now())
+
+  citizen_id    String
+  citizen       User            @relation(fields: [citizen_id], references: [id])
+  
+  department_id String
+  department    Department      @relation(fields: [department_id], references: [id])
+
+  assigned_officer_id String?
+  assigned_officer    User?           @relation("AssignedOfficer", fields: [assigned_officer_id], references: [id])
+
+  resolution_media    String[]        @default([])
+  resolution_description String?
+  resolved_at         DateTime?
+
+  internal_notes      InternalNote[]
+  feedback      Feedback?
+}
+
+model Feedback {
+  id            String      @id @default(uuid())
+  rating        Int
+  comments      String?
+  created_at    DateTime    @default(now())
+
+  complaint_id  String      @unique
+  complaint     Complaint   @relation(fields: [complaint_id], references: [id])
+
+  citizen_id    String
+  citizen       User        @relation(fields: [citizen_id], references: [id])
+}
+
+model Notification {
+  id            String      @id @default(uuid())
+  message       String
+  is_read       Boolean     @default(false)
+  created_at    DateTime    @default(now())
+
+  user_id       String
+  user          User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model InternalNote {
+  id            String      @id @default(uuid())
+  note          String
+  created_at    DateTime    @default(now())
+
+  complaint_id  String
+  complaint     Complaint   @relation(fields: [complaint_id], references: [id], onDelete: Cascade)
+
+  officer_id    String
+  officer       User        @relation(fields: [officer_id], references: [id], onDelete: Cascade)
+}
