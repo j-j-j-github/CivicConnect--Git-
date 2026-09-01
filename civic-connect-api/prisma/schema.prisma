@@ -29,7 +29,8 @@ model User {
   role          Role     @default(CITIZEN)
   created_at    DateTime @default(now())
 
-  complaints          Complaint[]
+  complaints          Complaint[] @relation("ComplaintCitizen")
+  overriddenComplaints Complaint[] @relation("ComplaintOverride")
   citizenProfile      CitizenProfile?
   feedbacks           Feedback[]
   notifications       Notification[]
@@ -59,14 +60,28 @@ model Complaint {
   title        String
   description  String
   status       ComplaintStatus @default(PENDING)
-  priority     String          @default("LOW") // Consider enum for HIGH, MEDIUM, LOW
+  priority     String          @default("LOW") // Consider enum for HIGH, MEDIUM, LOW, CRITICAL
   location_lat Float?
   location_lng Float?
   media_urls   String[]        @default([])
   created_at   DateTime        @default(now())
 
+  // AI Assistance fields
+  ai_category    String?
+  ai_department  String?
+  ai_priority    String?
+  ai_confidence  Float?
+  ai_summary     String?
+
+  // Human Override fields
+  is_ai_overridden Boolean   @default(false)
+  override_reason  String?
+  overridden_at    DateTime?
+  overriddenById   String?
+  overriddenBy     User?     @relation("ComplaintOverride", fields: [overriddenById], references: [id])
+
   citizen_id String
-  citizen    User   @relation(fields: [citizen_id], references: [id])
+  citizen    User   @relation("ComplaintCitizen", fields: [citizen_id], references: [id])
 
   department_id String
   department    Department @relation(fields: [department_id], references: [id])

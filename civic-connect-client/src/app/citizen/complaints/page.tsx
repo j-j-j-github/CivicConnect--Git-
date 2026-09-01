@@ -30,8 +30,16 @@ export default function ReportsPage() {
           title: c.title,
           date: new Date(c.created_at).toLocaleDateString(),
           status: c.status === 'PENDING' ? 'Pending' : c.status === 'IN_PROGRESS' ? 'In Progress' : 'Resolved',
+          priority: c.priority || 'LOW',
           category: c.department?.name || 'General',
           description: c.description,
+          ai_summary: c.ai_summary,
+          ai_category: c.ai_category,
+          ai_department: c.ai_department,
+          ai_priority: c.ai_priority,
+          ai_confidence: c.ai_confidence,
+          is_ai_overridden: c.is_ai_overridden,
+          override_reason: c.override_reason,
           address: `Lat: ${c.location_lat}, Lng: ${c.location_lng}`,
           lat: c.location_lat,
           lng: c.location_lng,
@@ -197,21 +205,57 @@ export default function ReportsPage() {
             </div>
             
             <div className="p-6 space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Category</h3>
-                <p className="font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{selectedComplaint.category || selectedComplaint.department || 'Unknown'}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Department</h3>
+                  <p className="font-medium text-gray-900 bg-gray-50 p-2.5 rounded-lg border border-gray-100">{selectedComplaint.category || selectedComplaint.department || 'General'}</p>
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Priority</h3>
+                  <span className={`inline-block font-semibold px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider border ${
+                    selectedComplaint.priority === 'CRITICAL' ? 'bg-red-100 text-red-800 border-red-200' :
+                    selectedComplaint.priority === 'HIGH' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                    selectedComplaint.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                    'bg-gray-100 text-gray-800 border-gray-200'
+                  }`}>
+                    {selectedComplaint.priority}
+                  </span>
+                </div>
               </div>
+
+              {selectedComplaint.ai_summary && (
+                <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-blue-900 flex items-center gap-1">
+                      🤖 AI Analysis Summary
+                    </span>
+                    {selectedComplaint.ai_confidence && (
+                      <span className="text-[11px] text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded-full font-medium">
+                        {Math.round(selectedComplaint.ai_confidence * 100)}% Confidence
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-blue-950 font-normal leading-relaxed mt-1">
+                    {selectedComplaint.ai_summary}
+                  </p>
+                  {selectedComplaint.is_ai_overridden && (
+                    <div className="mt-2 text-xs text-purple-700 bg-purple-50 p-2 rounded border border-purple-200">
+                      <strong>Human Override:</strong> {selectedComplaint.override_reason || 'Department/Priority adjusted by officer.'}
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h3>
-                <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">{selectedComplaint.description || 'No description provided.'}</p>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Original Description</h3>
+                <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 p-3.5 rounded-lg border border-gray-100">{selectedComplaint.description || 'No description provided.'}</p>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <MapPin size={16} /> Location
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                  <MapPin size={14} /> Location
                 </h3>
-                <p className="font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p className="font-medium text-xs text-gray-900 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
                   {selectedComplaint.address || (selectedComplaint.lat ? `Lat: ${selectedComplaint.lat.toFixed(4)}, Lng: ${selectedComplaint.lng.toFixed(4)}` : 'Location not provided')}
                 </p>
               </div>

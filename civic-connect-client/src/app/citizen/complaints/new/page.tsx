@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { UploadCloud, MapPin, Loader2, X, CheckCircle } from 'lucide-react';
+import { UploadCloud, MapPin, Loader2, X, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { fetchApi } from '../../../../lib/api';
@@ -22,7 +22,6 @@ export default function NewComplaintPage() {
   
   // Form State
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
@@ -32,9 +31,12 @@ export default function NewComplaintPage() {
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleMapClick = (e: any) => {
-    // This is handled inside LocationPicker component directly now
-  };
+  // Duplicate Modal State
+  const [duplicateWarning, setDuplicateWarning] = useState<{
+    message: string;
+    similarityScore?: number;
+    duplicateComplaintId?: string;
+  } | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -42,10 +44,8 @@ export default function NewComplaintPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitForm = async (forceCreate = false) => {
     setLoading(true);
-    
     try {
       let mediaUrls: string[] = [];
 
@@ -66,38 +66,82 @@ export default function NewComplaintPage() {
         setUploadingMedia(false);
       }
 
-      // Create new complaint object
+      // Create new complaint object (Department and Priority are omitted; AI automatically assigns them)
       await fetchApi('/complaints', {
         method: 'POST',
         body: JSON.stringify({
           title,
-          category,
           description,
           latitude: location?.lat || null,
           longitude: location?.lng || null,
-          media_urls: mediaUrls
+          media_urls: mediaUrls,
+          forceCreate,
         })
       });
 
       router.push('/citizen/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit complaint', error);
-      alert('Failed to submit complaint. Please try again.');
+      if (error?.status === 409 || error?.message?.includes('duplicate') || error?.duplicateDetected) {
+        setDuplicateWarning({
+          message: error?.message || 'A similar complaint has recently been reported nearby.',
+          similarityScore: error?.similarityScore,
+          duplicateComplaintId: error?.duplicateComplaintId,
+        });
+      } else {
+        alert(error?.message || 'Failed to submit complaint. Please try again.');
+      }
+    } finally {
       setLoading(false);
       setUploadingMedia(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitForm(false);
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Submit a Complaint</h1>
-        <p className="text-gray-600 mt-2">Help us build a better city by reporting issues in your area.</p>
+        <p className="text-gray-600 mt-2">
+          Help us build a better city by reporting issues in your area. Our AI system will automatically classify, route, and prioritize your complaint.
+        </p>
       </div>
+
+      {duplicateWarning && (
+        <div className="p-5 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+          <div className="flex items-center gap-2 text-amber-800 font-semibold">
+            <AlertTriangle size={20} className="text-amber-600" />
+            Possible Duplicate Complaint Detected
+          </div>
+          <p className="text-sm text-amber-700">
+            {duplicateWarning.message}
+            {duplicateWarning.similarityScore ? ` (Similarity score: ${Math.round(duplicateWarning.similarityScore * 100)}%)` : ''}
+          </p>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => submitForm(true)}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Submit Anyway
+            </button>
+            <button
+              type="button"
+              onClick={() => setDuplicateWarning(null)}
+              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"
+            >
+              Cancel & Review
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
         <form onSubmit={handleSubmit} className="space-y-6">
-          
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="title">
@@ -115,26 +159,6 @@ export default function NewComplaintPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="category">
-                Category (Department)
-              </label>
-              <select
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
-              >
-                <option value="">Select a category...</option>
-                <option value="Public Works">Public Works (PWD)</option>
-                <option value="Water Authority">Water Authority</option>
-                <option value="Electricity">Electricity Board</option>
-                <option value="Police">Police</option>
-                <option value="Municipality">Municipality (Waste, Health)</option>
-              </select>
-            </div>
-
-            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="description">
                 Detailed Description
               </label>
@@ -143,10 +167,13 @@ export default function NewComplaintPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
-                placeholder="Provide as much detail as possible..."
+                placeholder="Provide details about the issue (what happened, hazards, severity)..."
                 required
                 className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
               ></textarea>
+              <span className="text-xs text-gray-500 mt-1 block">
+                ✨ Department routing and priority level are assigned automatically by AI analysis.
+              </span>
             </div>
             
             <div>
@@ -236,7 +263,6 @@ export default function NewComplaintPage() {
               ) : 'Submit Complaint'}
             </button>
           </div>
-
         </form>
       </div>
     </div>
