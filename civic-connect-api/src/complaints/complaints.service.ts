@@ -14,16 +14,17 @@ export class ComplaintsService {
   }
 
   async createComplaint(userId: string, data: any) {
-    let department = await this.prisma.department.findFirst();
+    const categoryName = data.category || 'General';
+    let department = await this.prisma.department.findFirst({ where: { name: categoryName } });
     if (!department) {
       department = await this.prisma.department.create({
-        data: { name: 'General', description: 'General Complaints' },
+        data: { name: categoryName, description: `${categoryName} Department` },
       });
     }
 
     const complaint = await this.prisma.complaint.create({
       data: {
-        title: data.category || 'General Complaint',
+        title: data.title || 'Untitled Complaint',
         description: data.description,
         location_lat: data.latitude,
         location_lng: data.longitude,
