@@ -1,13 +1,11 @@
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
+const chromedriver = require('chromedriver');
 const assert = require('assert');
 const path = require('path');
 
-try {
-  require('chromedriver');
-} catch (e) {
-  // chromedriver optional if installed globally or managed by selenium
-}
+// Set ChromeDriver binary path explicitly from npm package
+const service = new chrome.ServiceBuilder(chromedriver.path);
 
 // CivicConnect E2E Test Suite
 // Authored for Capstone Documentation Validation
@@ -17,9 +15,10 @@ try {
   options.addArguments('--no-sandbox');
   options.addArguments('--disable-dev-shm-usage');
 
-  // Initialize Chrome Driver
+  // Initialize Chrome Driver with explicit service
   let driver = await new Builder()
     .forBrowser('chrome')
+    .setChromeService(service)
     .setChromeOptions(options)
     .build();
   
