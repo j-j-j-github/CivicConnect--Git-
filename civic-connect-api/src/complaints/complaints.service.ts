@@ -9,8 +9,44 @@ export class ComplaintsService {
     return this.prisma.complaint.findMany({
       where: { citizen_id: userId },
       orderBy: { created_at: 'desc' },
-      include: { department: true, feedback: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        location_lat: true,
+        location_lng: true,
+        media_urls: true,
+        created_at: true,
+        department: { select: { id: true, name: true } },
+        feedback: { select: { rating: true, comments: true, created_at: true } },
+        // ai_* and override fields intentionally omitted — citizens should not see AI internals
+      },
     });
+  }
+
+  /** Returns the AI analysis fields for a single complaint. Call only from officer/admin routes. */
+  async getAiInsights(complaintId: string) {
+    const complaint = await this.prisma.complaint.findUnique({
+      where: { id: complaintId },
+      select: {
+        id: true,
+        ai_category: true,
+        ai_department: true,
+        ai_priority: true,
+        ai_confidence: true,
+        ai_summary: true,
+        is_ai_overridden: true,
+        override_reason: true,
+        overridden_at: true,
+        overriddenById: true,
+      },
+    });
+    if (!complaint) {
+      throw new NotFoundException('Complaint not found');
+    }
+    return complaint;
   }
 
   async createComplaint(userId: string, data: any) {

@@ -32,6 +32,13 @@ export class ComplaintsController {
     return this.complaintsService.overrideComplaint(req.user.id, id, data);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @Get(':id/ai-insights')
+  async getAiInsights(@Param('id') id: string) {
+    return this.complaintsService.getAiInsights(id);
+  }
+
   @Get(':id/history')
   async getComplaintHistory(@Req() req: any, @Param('id') id: string) {
     return this.complaintsService.getComplaintHistory(req.user.id, id);

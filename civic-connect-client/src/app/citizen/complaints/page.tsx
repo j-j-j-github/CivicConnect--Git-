@@ -33,13 +33,6 @@ export default function ReportsPage() {
           priority: c.priority || 'LOW',
           category: c.department?.name || 'General',
           description: c.description,
-          ai_summary: c.ai_summary,
-          ai_category: c.ai_category,
-          ai_department: c.ai_department,
-          ai_priority: c.ai_priority,
-          ai_confidence: c.ai_confidence,
-          is_ai_overridden: c.is_ai_overridden,
-          override_reason: c.override_reason,
           address: `Lat: ${c.location_lat}, Lng: ${c.location_lng}`,
           lat: c.location_lat,
           lng: c.location_lng,
@@ -223,28 +216,7 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {selectedComplaint.ai_summary && (
-                <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-blue-900 flex items-center gap-1">
-                      🤖 AI Analysis Summary
-                    </span>
-                    {selectedComplaint.ai_confidence && (
-                      <span className="text-[11px] text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded-full font-medium">
-                        {Math.round(selectedComplaint.ai_confidence * 100)}% Confidence
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-blue-950 font-normal leading-relaxed mt-1">
-                    {selectedComplaint.ai_summary}
-                  </p>
-                  {selectedComplaint.is_ai_overridden && (
-                    <div className="mt-2 text-xs text-purple-700 bg-purple-50 p-2 rounded border border-purple-200">
-                      <strong>Human Override:</strong> {selectedComplaint.override_reason || 'Department/Priority adjusted by officer.'}
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* AI analysis is intentionally hidden from citizens — visible to officers/admins only */}
               
               <div>
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Original Description</h3>

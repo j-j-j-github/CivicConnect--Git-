@@ -33,8 +33,6 @@ export default function NewComplaintPage() {
 
   // Duplicate Modal State
   const [duplicateWarning, setDuplicateWarning] = useState<{
-    message: string;
-    similarityScore?: number;
     duplicateComplaintId?: string;
   } | null>(null);
 
@@ -84,8 +82,6 @@ export default function NewComplaintPage() {
       console.error('Failed to submit complaint', error);
       if (error?.status === 409 || error?.message?.includes('duplicate') || error?.duplicateDetected) {
         setDuplicateWarning({
-          message: error?.message || 'A similar complaint has recently been reported nearby.',
-          similarityScore: error?.similarityScore,
           duplicateComplaintId: error?.duplicateComplaintId,
         });
       } else {
@@ -115,11 +111,10 @@ export default function NewComplaintPage() {
         <div className="p-5 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
           <div className="flex items-center gap-2 text-amber-800 font-semibold">
             <AlertTriangle size={20} className="text-amber-600" />
-            Possible Duplicate Complaint Detected
+            Similar Report Already Submitted
           </div>
           <p className="text-sm text-amber-700">
-            {duplicateWarning.message}
-            {duplicateWarning.similarityScore ? ` (Similarity score: ${Math.round(duplicateWarning.similarityScore * 100)}%)` : ''}
+            A similar complaint was already reported nearby. Would you still like to submit your report?
           </p>
           <div className="flex gap-3 pt-2">
             <button
