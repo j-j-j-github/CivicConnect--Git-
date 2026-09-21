@@ -47,7 +47,7 @@ export class ComplaintsService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: data.category || 'General Complaint', // title is required by AI service
+          title: data.title || 'General Complaint',
           description: data.description,
           location_lat: data.latitude,
           location_lng: data.longitude,
@@ -67,10 +67,9 @@ export class ComplaintsService {
     // 3. Duplicate Detection Handling
     if (aiResponse && aiResponse.duplicate_detected && !data.forceCreate) {
       throw new ConflictException({
-        message: 'A similar complaint was recently submitted.',
+        message: 'A similar complaint was already reported nearby.',
         duplicateDetected: true,
         duplicateComplaintId: aiResponse.duplicate_complaint_id,
-        similarityScore: aiResponse.duplicate_similarity_score,
       });
     }
 
