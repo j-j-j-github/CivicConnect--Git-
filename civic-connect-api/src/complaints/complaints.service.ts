@@ -2,6 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException,
 import { PrismaService } from '../prisma/prisma.service';
 import { ComplaintStatus } from '@prisma/client';
 
+const STATUS_MAP: Record<string, ComplaintStatus> = {
+  PENDING:     ComplaintStatus.PENDING,
+  VERIFIED:    ComplaintStatus.VERIFIED,
+  IN_PROGRESS: ComplaintStatus.VERIFIED, // alias used in UI
+  RESOLVED:    ComplaintStatus.RESOLVED,
+  REJECTED:    ComplaintStatus.REJECTED,
+};
+
 @Injectable()
 export class ComplaintsService {
   constructor(private prisma: PrismaService) {}
@@ -47,6 +55,78 @@ export class ComplaintsService {
       throw new NotFoundException('Complaint not found');
     }
     return complaint;
+  }
+
+  /** Returns all complaints with full details for officer/admin portal. */
+  async getAllComplaints() {
+    return this.prisma.complaint.findMany({
+      orderBy: { created_at: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        location_lat: true,
+        location_lng: true,
+        media_urls: true,
+        created_at: true,
+        // AI fields
+        ai_category: true,
+        ai_department: true,
+        ai_priority: true,
+        ai_confidence: true,
+        ai_summary: true,
+        is_ai_overridden: true,
+        override_reason: true,
+        overridden_at: true,
+        overriddenById: true,
+        // Relations
+        citizen: { select: { id: true, email: true, citizenProfile: { select: { full_name: true } } } },
+        department: { select: { id: true, name: true } },
+        feedback: { select: { rating: true, comments: true } },
+      },
+    });
+  }
+
+  /** Updates complaint status and notifies the citizen. Officer/admin only. */
+  async updateComplaintStatus(officerId: string, complaintId: string, newStatus: string, note?: string) {
+    const complaint = await this.prisma.complaint.findUnique({
+      where: { id: complaintId },
+      select: { id: true, citizen_id: true, title: true },
+    });
+    if (!complaint) throw new NotFoundException('Complaint not found');
+
+    const status = STATUS_MAP[newStatus.toUpperCase()];
+    if (!status) throw new BadRequestException(`Invalid status: ${newStatus}`);
+
+    const updated = await this.prisma.complaint.update({
+      where: { id: complaintId },
+      data: { status },
+    });
+
+    await this.prisma.complaintStatusHistory.create({
+      data: {
+        complaintId: complaint.id,
+        status,
+        note: note || `Status updated to ${newStatus}`,
+        changedById: officerId,
+      },
+    });
+
+    // Notify the citizen
+    const statusLabel =
+      status === ComplaintStatus.VERIFIED  ? 'In Progress' :
+      status === ComplaintStatus.RESOLVED  ? 'Resolved'    :
+      status === ComplaintStatus.REJECTED  ? 'Rejected'    : 'Pending';
+    await this.prisma.notification.create({
+      data: {
+        user_id: complaint.citizen_id,
+        message: `Your complaint "${complaint.title}" has been updated to ${statusLabel}.${note ? ` Note: ${note}` : ''}`,
+      },
+    });
+
+    return updated;
   }
 
   async createComplaint(userId: string, data: any) {

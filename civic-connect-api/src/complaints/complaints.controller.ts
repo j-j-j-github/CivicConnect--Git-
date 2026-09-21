@@ -15,6 +15,13 @@ export class ComplaintsController {
     return this.complaintsService.getMyComplaints(req.user.id);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @Get()
+  async getAllComplaints() {
+    return this.complaintsService.getAllComplaints();
+  }
+
   @Post()
   async createComplaint(@Req() req: any, @Body() data: any) {
     return this.complaintsService.createComplaint(req.user.id, data);
@@ -23,6 +30,13 @@ export class ComplaintsController {
   @Patch(':id/reopen')
   async reopenComplaint(@Req() req: any, @Param('id') id: string) {
     return this.complaintsService.reopenComplaint(req.user.id, id);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @Patch(':id/status')
+  async updateStatus(@Req() req: any, @Param('id') id: string, @Body() data: { status: string; note?: string }) {
+    return this.complaintsService.updateComplaintStatus(req.user.id, id, data.status, data.note);
   }
 
   @UseGuards(RolesGuard)
@@ -44,3 +58,4 @@ export class ComplaintsController {
     return this.complaintsService.getComplaintHistory(req.user.id, id);
   }
 }
+

@@ -25,11 +25,18 @@ export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
 
   if (!response.ok) {
     let errorMsg = 'An error occurred';
+    let extraFields: Record<string, any> = {};
     try {
       const errorData = await response.json();
       errorMsg = errorData.message || errorMsg;
+      // Propagate structured fields (e.g. duplicateDetected, duplicateComplaintId from 409)
+      const { message: _msg, statusCode: _code, ...rest } = errorData;
+      extraFields = rest;
     } catch (e) {}
-    throw new Error(errorMsg);
+    const err: any = new Error(errorMsg);
+    err.status = response.status;
+    Object.assign(err, extraFields);
+    throw err;
   }
 
   if (response.status === 204) return null;
