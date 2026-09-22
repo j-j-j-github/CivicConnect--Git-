@@ -13,6 +13,13 @@ export function middleware(request: NextRequest) {
     const base64Payload = token.split('.')[1];
     const payload = JSON.parse(atob(base64Payload));
     
+    // Check 10-minute session expiration
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      const response = NextResponse.redirect(new URL('/auth/login?reason=expired', request.url));
+      response.cookies.delete('token');
+      return response;
+    }
+
     const role = payload.role;
     const path = request.nextUrl.pathname;
 

@@ -31,7 +31,8 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-      Cookies.set('token', data.access_token, { expires: 1, path: '/' });
+      const tenMinutes = new Date(Date.now() + 10 * 60 * 1000);
+      Cookies.set('token', data.access_token, { expires: tenMinutes, path: '/' });
       
       if (data.user.role === 'ADMIN') {
         router.push('/admin/dashboard');
