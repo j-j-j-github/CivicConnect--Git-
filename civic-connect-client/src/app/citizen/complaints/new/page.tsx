@@ -79,8 +79,13 @@ export default function NewComplaintPage() {
 
       router.push('/citizen/dashboard');
     } catch (error: any) {
-      console.error('Failed to submit complaint', error);
-      if (error?.status === 409 || error?.message?.includes('duplicate') || error?.duplicateDetected) {
+      const isDuplicate = error?.status === 409 || error?.message?.includes('duplicate') || error?.duplicateDetected;
+      
+      if (!isDuplicate) {
+        console.error('Failed to submit complaint', error);
+      }
+
+      if (isDuplicate) {
         setDuplicateWarning({
           duplicateComplaintId: error?.duplicateComplaintId,
         });

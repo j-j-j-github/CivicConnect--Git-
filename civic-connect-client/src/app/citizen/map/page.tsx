@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { fetchApi } from '../../../lib/api';
 
 // Dynamically import Leaflet Map to avoid SSR window errors
 const LiveMap = dynamic(() => import('../../../components/map/LiveMap'), {
@@ -14,25 +15,27 @@ const LiveMap = dynamic(() => import('../../../components/map/LiveMap'), {
   ),
 });
 
-// Mock initial incidents for the map
-const initialIncidents = [
-  { id: '1', lat: 40.7128, lng: -74.0060, title: 'Pothole on Main St' },
-  { id: '2', lat: 40.7150, lng: -74.0020, title: 'Broken Streetlight' },
-];
-
 export default function MapPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('civic_complaints');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Filter out complaints without coordinates
-      const mapped = parsed.filter((c: any) => c.lat && c.lng);
-      setIncidents(mapped.length > 0 ? mapped : initialIncidents);
-    } else {
-      setIncidents(initialIncidents);
-    }
+    const fetchComplaints = async () => {
+      try {
+        const data = await fetchApi('/complaints/my');
+        if (data && Array.isArray(data)) {
+          setIncidents(data);
+        } else if (data && data.data && Array.isArray(data.data)) {
+          // Fallback just in case the API wraps it in a data property
+          setIncidents(data.data);
+        } else {
+          setIncidents([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch complaints for map:', error);
+      }
+    };
+
+    fetchComplaints();
   }, []);
 
   return (
