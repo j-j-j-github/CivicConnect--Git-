@@ -35,7 +35,7 @@ export default function LoginPage() {
       Cookies.set('token', data.access_token, { expires: 1, path: '/' });
       
       if (data.user.role === 'ADMIN') {
-        router.push('/admin/dashboard');
+        router.push('/admin');
       } else if (data.user.role === 'OFFICER') {
         router.push('/officer/dashboard');
       } else {
