@@ -130,46 +130,11 @@ export class ComplaintsService {
   }
 
   async createComplaint(userId: string, data: any) {
-    // 1. Fetch recent complaints for duplicate checking
-    const recentComplaints = await this.prisma.complaint.findMany({
-      take: 20,
-      orderBy: { created_at: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        ai_category: true,
-        location_lat: true,
-        location_lng: true,
-        created_at: true,
-      }
-    });
-
-    const historicalReports = recentComplaints.map(c => ({
-      id: c.id,
-      title: c.title,
-      description: c.description,
-      category: c.ai_category,
-      location_lat: c.location_lat,
-      location_lng: c.location_lng,
-      created_at: c.created_at.toISOString(),
-    }));
-
-    // 2. Call AI Service
-    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-    let aiResponse: any = null;
-    try {
-      const response = await fetch(`${aiServiceUrl}/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: data.title || 'General Complaint',
-          description: data.description,
-          location_lat: data.latitude,
-          location_lng: data.longitude,
-          historical_reports: historicalReports,
-        }),
-        signal: AbortSignal.timeout(5000)
+    const categoryName = data.category || 'General';
+    let department = await this.prisma.department.findFirst({ where: { name: categoryName } });
+    if (!department) {
+      department = await this.prisma.department.create({
+        data: { name: categoryName, description: `${categoryName} Department` },
       });
       if (response.ok) {
         aiResponse = await response.json();
@@ -211,7 +176,7 @@ export class ComplaintsService {
     // 5. Create Complaint
     const complaint = await this.prisma.complaint.create({
       data: {
-        title: data.title || 'General Complaint',
+        title: data.title || 'Untitled Complaint',
         description: data.description,
         status: ComplaintStatus.PENDING,
         priority: priority,
