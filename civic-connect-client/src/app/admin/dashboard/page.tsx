@@ -15,23 +15,23 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    // Load some fresh stats if possible
     async function loadStats() {
       try {
         const token = Cookies.get('token');
         if (!token) return;
 
-        const res = await fetch('http://localhost:3001/api/v1/departments', {
+        const res = await fetch('http://localhost:3001/api/v1/admin/stats', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         if (res.ok) {
           const data = await res.json();
-          setStats(prev => ({
-            ...prev,
-            departmentsCount: data.length
-          }));
+          setStats({
+            departmentsCount: data.departmentsCount,
+            usersCount: data.usersCount,
+            complaintsCount: data.complaintsCount
+          });
         }
       } catch (err) {
         console.error(err);

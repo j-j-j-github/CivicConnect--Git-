@@ -14,16 +14,19 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, overrideEmail?: string, overridePassword?: string) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    const targetEmail = overrideEmail || email;
+    const targetPassword = overridePassword || password;
 
     try {
       const res = await fetch('http://localhost:3001/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: targetEmail, password: targetPassword }),
       });
 
       if (!res.ok) {
@@ -144,6 +147,35 @@ export default function LoginPage() {
              >
                Create Citizen Account
              </Link>
+          </div>
+
+          <div className="mt-8 border-t border-gray-200 pt-6">
+            <p className="text-center text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+              Demo Logins (One-Click)
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, 'admin@civicconnect.gov', 'password123')}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#042B6B] bg-white px-4 py-2 text-sm font-semibold text-[#042B6B] hover:bg-blue-50 transition-colors"
+              >
+                Login as Administrator
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, 'officer@pwd.gov', 'password123')}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-orange-500 bg-white px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition-colors"
+              >
+                Login as Department Officer
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, 'citizen@example.com', 'password123')}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-green-500 bg-white px-4 py-2 text-sm font-semibold text-green-600 hover:bg-green-50 transition-colors"
+              >
+                Login as Citizen
+              </button>
+            </div>
           </div>
         </form>
 
