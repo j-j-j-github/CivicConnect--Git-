@@ -35,8 +35,18 @@ export default function CitizenDashboard() {
           setComplaints(mapped);
         }
         
-        if (profileData && profileData.citizenProfile) {
-          setProfileName(profileData.citizenProfile.full_name || 'Citizen');
+        if (profileData) {
+          let nameToUse = 'Citizen';
+          if (profileData.citizenProfile && profileData.citizenProfile.full_name) {
+            nameToUse = profileData.citizenProfile.full_name;
+          } else if (profileData.email) {
+            nameToUse = profileData.email.split('@')[0];
+          }
+          
+          const firstName = nameToUse.split(' ')[0];
+          const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+          
+          setProfileName(capitalizedName);
         }
       } catch (error) {
         console.error('Failed to load dashboard data', error);
@@ -67,7 +77,7 @@ export default function CitizenDashboard() {
       {/* Greeting */}
       <div>
         <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-          Hello, {profileName.split(' ')[0]} <span className="text-3xl">👋</span>
+          Hello, {profileName} <span className="text-3xl">👋</span>
         </h1>
         <p className="text-gray-500 mt-2 text-lg">Here's your civic engagement overview for today.</p>
       </div>
