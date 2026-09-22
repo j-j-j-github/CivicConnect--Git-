@@ -20,14 +20,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Mock Admin Authentication
-      if (email.trim() === 'admin@cc' && password.trim() === 'Admin@123') {
-        Cookies.set('token', 'mock_admin_token', { expires: 1, path: '/' });
-        router.push('/admin');
-        return;
-      }
-
-      const res = await fetch('http://localhost:3001/api/v1/auth/login', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const res = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -127,7 +121,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex justify-end pt-1">
-            <Link href="#" className="text-sm font-bold text-[#042B6B] hover:underline">
+            <Link href="/auth/forgot-password" className="text-sm font-bold text-[#042B6B] hover:underline">
               Forgot Password?
             </Link>
           </div>

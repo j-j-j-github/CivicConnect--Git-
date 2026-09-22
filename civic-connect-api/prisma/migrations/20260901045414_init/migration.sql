@@ -1,0 +1,2 @@
+-- Placeholder migration - schema already exists in Neon database
+-- This file marks the existing schema as migrated
