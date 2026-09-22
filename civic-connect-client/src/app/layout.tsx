@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import SessionTimeout from "@/components/SessionTimeout";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -17,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans bg-gray-50 text-gray-900 antialiased`}>
-        {/* Navigation/Header component can be injected here */}
+        <SessionTimeout />
         <main className="min-h-screen flex flex-col">
           {children}
         </main>
