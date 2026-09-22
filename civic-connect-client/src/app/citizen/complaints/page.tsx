@@ -30,6 +30,7 @@ export default function ReportsPage() {
           title: c.title,
           date: new Date(c.created_at).toLocaleDateString(),
           status: c.status === 'PENDING' ? 'Pending' : c.status === 'IN_PROGRESS' ? 'In Progress' : 'Resolved',
+          priority: c.priority || 'LOW',
           category: c.department?.name || 'General',
           description: c.description,
           address: `Lat: ${c.location_lat}, Lng: ${c.location_lng}`,
@@ -197,21 +198,36 @@ export default function ReportsPage() {
             </div>
             
             <div className="p-6 space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Category</h3>
-                <p className="font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{selectedComplaint.category || selectedComplaint.department || 'Unknown'}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Department</h3>
+                  <p className="font-medium text-gray-900 bg-gray-50 p-2.5 rounded-lg border border-gray-100">{selectedComplaint.category || selectedComplaint.department || 'General'}</p>
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Priority</h3>
+                  <span className={`inline-block font-semibold px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider border ${
+                    selectedComplaint.priority === 'CRITICAL' ? 'bg-red-100 text-red-800 border-red-200' :
+                    selectedComplaint.priority === 'HIGH' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                    selectedComplaint.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                    'bg-gray-100 text-gray-800 border-gray-200'
+                  }`}>
+                    {selectedComplaint.priority}
+                  </span>
+                </div>
               </div>
+
+              {/* AI analysis is intentionally hidden from citizens — visible to officers/admins only */}
               
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h3>
-                <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">{selectedComplaint.description || 'No description provided.'}</p>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Original Description</h3>
+                <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 p-3.5 rounded-lg border border-gray-100">{selectedComplaint.description || 'No description provided.'}</p>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <MapPin size={16} /> Location
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                  <MapPin size={14} /> Location
                 </h3>
-                <p className="font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p className="font-medium text-xs text-gray-900 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
                   {selectedComplaint.address || (selectedComplaint.lat ? `Lat: ${selectedComplaint.lat.toFixed(4)}, Lng: ${selectedComplaint.lng.toFixed(4)}` : 'Location not provided')}
                 </p>
               </div>
