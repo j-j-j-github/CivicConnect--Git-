@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Bell, UserCircle, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { Bell, UserCircle, Check, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { fetchApi } from '../../lib/api';
 
@@ -13,6 +15,12 @@ export default function CitizenLayout({
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    Cookies.remove('token');
+    router.push('/auth/login');
+  };
 
   const loadNotifications = async () => {
     try {
@@ -118,6 +126,9 @@ export default function CitizenLayout({
             {/* Placeholder avatar */}
             <UserCircle size={32} className="text-gray-400" />
           </Link>
+          <button onClick={handleLogout} className="text-gray-500 hover:text-gray-900 transition-colors" title="Logout">
+            <LogOut size={20} />
+          </button>
         </div>
       </header>
       

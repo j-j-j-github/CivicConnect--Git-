@@ -1,5 +1,8 @@
+'use client';
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 import { 
   Users, 
   Building2, 
@@ -11,10 +14,18 @@ import {
   ShieldAlert,
   Menu,
   Bell,
-  Search
+  Search,
+  LogOut
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    Cookies.remove('token');
+    router.push('/auth/login');
+  };
+
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: BarChart3 },
     { name: 'Users', href: '/admin/users', icon: Users },
@@ -52,13 +63,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         
         <div className="p-4 border-t border-slate-800">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold">
-              AG
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">Arjun Ghosh</p>
-              <p className="text-xs text-slate-400">System Admin</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold">
+                A
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">Admin User</p>
+                <p className="text-xs text-slate-400">System Admin</p>
+              </div>
             </div>
           </div>
         </div>
@@ -87,6 +100,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button className="relative text-gray-400 hover:text-gray-600">
               <Bell className="h-5 w-5" />
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+            </button>
+            <button onClick={handleLogout} className="text-gray-400 hover:text-gray-600 flex items-center text-sm font-medium border-l pl-4 border-gray-200">
+              <LogOut className="h-4 w-4 mr-1" />
+              Logout
             </button>
           </div>
         </header>

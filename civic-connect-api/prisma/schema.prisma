@@ -35,6 +35,12 @@ model User {
   feedbacks           Feedback[]
   notifications       Notification[]
   passwordResetTokens PasswordResetToken[]
+
+  // Relations from Department-Module
+  department_id       String?
+  department          Department? @relation(fields: [department_id], references: [id])
+  internal_notes      InternalNote[]
+  assigned_complaints Complaint[] @relation("AssignedOfficer")
 }
 
 model CitizenProfile {
@@ -53,6 +59,7 @@ model Department {
   description String?
 
   complaints Complaint[]
+  officers   User[]
 }
 
 model Complaint {
@@ -85,6 +92,14 @@ model Complaint {
 
   department_id String
   department    Department @relation(fields: [department_id], references: [id])
+
+  // Department-Module fields
+  assigned_officer_id String?
+  assigned_officer    User?           @relation("AssignedOfficer", fields: [assigned_officer_id], references: [id])
+  resolution_media    String[]        @default([])
+  resolution_description String?
+  resolved_at         DateTime?
+  internal_notes      InternalNote[]
 
   feedback                 Feedback?
   complaintStatusHistories ComplaintStatusHistory[]
@@ -133,4 +148,16 @@ model ComplaintStatusHistory {
   createdAt   DateTime        @default(now())
 
   complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+}
+
+model InternalNote {
+  id            String      @id @default(uuid())
+  note          String
+  created_at    DateTime    @default(now())
+
+  complaint_id  String
+  complaint     Complaint   @relation(fields: [complaint_id], references: [id], onDelete: Cascade)
+
+  officer_id    String
+  officer       User        @relation(fields: [officer_id], references: [id], onDelete: Cascade)
 }

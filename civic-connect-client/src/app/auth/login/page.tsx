@@ -92,7 +92,7 @@ export default function LoginPage() {
               placeholder="citizen@example.com"
               className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-[#042B6B] focus:outline-none focus:ring-1 focus:ring-[#042B6B] transition-colors"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
             />
           </div>
 

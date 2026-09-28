@@ -90,7 +90,8 @@ export class ComplaintsService {
   }
 
   /** Updates complaint status and notifies the citizen. Officer/admin only. */
-  async updateComplaintStatus(officerId: string, complaintId: string, newStatus: string, note?: string) {
+  async updateComplaintStatus(officerId: string, complaintId: string, data: any) {
+    const { status: newStatus, note, resolution_description, resolution_media } = data;
     const complaint = await this.prisma.complaint.findUnique({
       where: { id: complaintId },
       select: { id: true, citizen_id: true, title: true },
@@ -100,9 +101,16 @@ export class ComplaintsService {
     const status = STATUS_MAP[newStatus.toUpperCase()];
     if (!status) throw new BadRequestException(`Invalid status: ${newStatus}`);
 
+    const updateData: any = { status };
+    if (status === 'RESOLVED') {
+      updateData.resolution_description = resolution_description;
+      updateData.resolution_media = resolution_media || [];
+      updateData.resolved_at = new Date();
+    }
+
     const updated = await this.prisma.complaint.update({
       where: { id: complaintId },
-      data: { status },
+      data: updateData,
     });
 
     await this.prisma.complaintStatusHistory.create({
@@ -321,6 +329,80 @@ export class ComplaintsService {
     return this.prisma.complaintStatusHistory.findMany({
       where: { complaintId },
       orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async assignOfficer(id: string, userId: string, role: string, departmentId: string | undefined, dto: any) {
+    const complaint = await this.prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) throw new NotFoundException(`Complaint with ID ${id} not found`);
+
+    if (role !== 'ADMIN' && role !== 'OFFICER') {
+      throw new ForbiddenException('Only admins or officers can assign officers to complaints');
+    }
+
+    if (dto.officer_id) {
+      const officer = await this.prisma.user.findUnique({
+        where: { id: dto.officer_id }
+      });
+
+      if (!officer || officer.role !== 'OFFICER') {
+        throw new BadRequestException('Selected user is not an officer');
+      }
+
+      if (role !== 'ADMIN' && officer.department_id !== complaint.department_id) {
+        throw new BadRequestException('Officer must belong to the same department as the complaint');
+      }
+    }
+
+    return this.prisma.complaint.update({
+      where: { id },
+      data: { assigned_officer_id: dto.officer_id || null }
+    });
+  }
+
+  async reassignDepartment(id: string, userId: string, role: string, departmentId: string | undefined, dto: any) {
+    const complaint = await this.prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) throw new NotFoundException(`Complaint with ID ${id} not found`);
+
+    if (role !== 'ADMIN' && role !== 'OFFICER') {
+      throw new ForbiddenException('Only admins or officers can reassign departments');
+    }
+
+    const dept = await this.prisma.department.findUnique({
+      where: { id: dto.department_id }
+    });
+    if (!dept) {
+      throw new NotFoundException(`Department with ID ${dto.department_id} not found`);
+    }
+
+    return this.prisma.complaint.update({
+      where: { id },
+      data: {
+        department_id: dto.department_id,
+        assigned_officer_id: null // clear officer assignment on department change
+      }
+    });
+  }
+
+  async addNote(id: string, userId: string, role: string, departmentId: string | undefined, dto: any) {
+    const complaint = await this.prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) throw new NotFoundException(`Complaint with ID ${id} not found`);
+
+    if (role !== 'ADMIN' && role !== 'OFFICER') {
+      throw new ForbiddenException('Only admins or officers can add internal notes');
+    }
+
+    return this.prisma.internalNote.create({
+      data: {
+        note: dto.note,
+        complaint_id: id,
+        officer_id: userId
+      },
+      include: {
+        officer: {
+          select: { id: true, email: true }
+        }
+      }
     });
   }
 }

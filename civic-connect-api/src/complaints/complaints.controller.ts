@@ -4,6 +4,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
+import { AssignOfficerDto } from './dto/assign-officer.dto';
+import { ReassignDepartmentDto } from './dto/reassign-department.dto';
+import { CreateNoteDto } from './dto/create-note.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('complaints')
@@ -35,8 +38,8 @@ export class ComplaintsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.OFFICER)
   @Patch(':id/status')
-  async updateStatus(@Req() req: any, @Param('id') id: string, @Body() data: { status: string; note?: string }) {
-    return this.complaintsService.updateComplaintStatus(req.user.id, id, data.status, data.note);
+  async updateStatus(@Req() req: any, @Param('id') id: string, @Body() data: any) {
+    return this.complaintsService.updateComplaintStatus(req.user.id, id, data);
   }
 
   @UseGuards(RolesGuard)
@@ -56,6 +59,27 @@ export class ComplaintsController {
   @Get(':id/history')
   async getComplaintHistory(@Req() req: any, @Param('id') id: string) {
     return this.complaintsService.getComplaintHistory(req.user.id, id);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @Patch(':id/assign-officer')
+  async assignOfficer(@Req() req: any, @Param('id') id: string, @Body() data: AssignOfficerDto) {
+    return this.complaintsService.assignOfficer(id, req.user.id, req.user.role, undefined, data);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @Patch(':id/reassign-department')
+  async reassignDepartment(@Req() req: any, @Param('id') id: string, @Body() data: ReassignDepartmentDto) {
+    return this.complaintsService.reassignDepartment(id, req.user.id, req.user.role, undefined, data);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @Post(':id/notes')
+  async addNote(@Req() req: any, @Param('id') id: string, @Body() data: CreateNoteDto) {
+    return this.complaintsService.addNote(id, req.user.id, req.user.role, undefined, data);
   }
 }
 
