@@ -1,184 +1,174 @@
-import React from 'react';
-import { AlertCircle, Clock, ShieldAlert, ArrowUpRight, Search, Filter } from 'lucide-react';
+'use client';
 
-export default function SLAPage() {
-  const overdueTickets = [
-    { id: 'TKT-8942', category: 'Water Leak', department: 'Water & Sanitation', priority: 'P1', due: '2 hours ago', status: 'Escalated to Head' },
-    { id: 'TKT-8910', category: 'Pothole', department: 'Public Works', priority: 'P2', due: '1 day ago', status: 'Pending Review' },
-    { id: 'TKT-8845', category: 'Traffic Light Out', department: 'Traffic & Transport', priority: 'P1', due: '4 hours ago', status: 'Escalated to Head' },
-    { id: 'TKT-8799', category: 'Tree Fallen', department: 'Parks & Recreation', priority: 'P2', due: '2 days ago', status: 'Warning Sent' },
-  ];
+import React, { useEffect, useState } from 'react';
+import { Clock, AlertTriangle, ShieldAlert, CheckCircle } from 'lucide-react';
+import Cookies from 'js-cookie';
 
-  const pendingTickets = [
-    { id: 'TKT-8990', category: 'Garbage Collection', department: 'Public Works', priority: 'P3', due: 'in 4 hours', status: 'Assigned' },
-    { id: 'TKT-8985', category: 'Street Light', department: 'Electrical', priority: 'P3', due: 'in 8 hours', status: 'In Progress' },
-    { id: 'TKT-8970', category: 'Pipe Burst', department: 'Water & Sanitation', priority: 'P1', due: 'in 1 hour', status: 'Assigned' },
-  ];
+export default function SlaTrackingDashboard() {
+  const [complaints, setComplaints] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const token = Cookies.get('token');
+      const compRes = await fetch('http://localhost:3001/api/v1/complaints', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (compRes.ok) {
+        const data = await compRes.json();
+        setComplaints(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading SLA data...</div>;
+
+  const now = new Date();
+
+  // SLA Rules (hours)
+  const slaRules: Record<string, number> = {
+    P1: 24,
+    P2: 48,
+    P3: 168, // 7 days
+    P4: 336  // 14 days
+  };
+
+  const activeComplaints = complaints.filter(c => c.status === 'PENDING' || c.status === 'VERIFIED');
+
+  let overdueCount = 0;
+  let atRiskCount = 0;
+  let healthyCount = 0;
+
+  const slaData = activeComplaints.map(c => {
+    const created = new Date(c.created_at);
+    const limitHours = slaRules[c.priority] || 72; // Default 72h
+    const dueTime = new Date(created.getTime() + limitHours * 60 * 60 * 1000);
+    const msRemaining = dueTime.getTime() - now.getTime();
+    const hoursRemaining = msRemaining / (1000 * 60 * 60);
+
+    let slaStatus = 'HEALTHY';
+    if (hoursRemaining < 0) {
+      slaStatus = 'OVERDUE';
+      overdueCount++;
+    } else if (hoursRemaining < 24) {
+      slaStatus = 'AT_RISK';
+      atRiskCount++;
+    } else {
+      healthyCount++;
+    }
+
+    return { ...c, dueTime, hoursRemaining, slaStatus };
+  });
+
+  const sortedSlaData = slaData.sort((a, b) => a.hoursRemaining - b.hoursRemaining);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">SLA Escalation Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Monitor Service Level Agreements, pending deadlines, and automated escalations.</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <Clock className="text-blue-600" /> SLA Tracking & Escalation
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">Monitor Service Level Agreements and overdue tickets across all departments.</p>
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-red-50 p-6 rounded-xl border border-red-100 flex items-center">
-          <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
-            <AlertCircle className="h-6 w-6 text-red-600" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-red-800">Overdue Tickets</p>
-            <h3 className="text-2xl font-bold text-red-900 mt-1">24</h3>
-          </div>
+        <div className="bg-red-50 p-6 rounded-xl border border-red-200 shadow-sm flex flex-col items-center justify-center">
+          <AlertTriangle className="text-red-500 mb-2" size={24} />
+          <h3 className="text-sm font-medium text-red-700 uppercase tracking-wider mb-1 text-center">Overdue Tickets</h3>
+          <span className="text-4xl font-black text-red-900">{overdueCount}</span>
         </div>
-        
-        <div className="bg-amber-50 p-6 rounded-xl border border-amber-100 flex items-center">
-          <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center mr-4">
-            <Clock className="h-6 w-6 text-amber-600" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-amber-800">Due in &lt; 24h</p>
-            <h3 className="text-2xl font-bold text-amber-900 mt-1">142</h3>
-          </div>
+        <div className="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm flex flex-col items-center justify-center">
+          <Clock className="text-amber-500 mb-2" size={24} />
+          <h3 className="text-sm font-medium text-amber-700 uppercase tracking-wider mb-1 text-center">Due &lt; 24h (At Risk)</h3>
+          <span className="text-4xl font-black text-amber-900">{atRiskCount}</span>
         </div>
-
-        <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 flex items-center">
-          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-            <ShieldAlert className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-blue-800">Active Escalations</p>
-            <h3 className="text-2xl font-bold text-blue-900 mt-1">8</h3>
-          </div>
+        <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200 shadow-sm flex flex-col items-center justify-center">
+          <CheckCircle className="text-emerald-500 mb-2" size={24} />
+          <h3 className="text-sm font-medium text-emerald-700 uppercase tracking-wider mb-1 text-center">Healthy Tickets</h3>
+          <span className="text-4xl font-black text-emerald-900">{healthyCount}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Overdue Tickets Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
-              Critical Overdue Tickets
-            </h2>
-            <button className="text-sm text-blue-600 font-medium hover:text-blue-800">View All</button>
-          </div>
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mt-8">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <ShieldAlert size={18} className="text-blue-600" /> Active Tickets by Urgency
+          </h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+              <tr>
+                <th className="px-6 py-4 font-bold">Ticket Details</th>
+                <th className="px-6 py-4 font-bold">Department</th>
+                <th className="px-6 py-4 font-bold">Priority</th>
+                <th className="px-6 py-4 font-bold">SLA Status</th>
+                <th className="px-6 py-4 font-bold">Time Remaining</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {sortedSlaData.length === 0 ? (
                 <tr>
-                  <th className="px-4 py-3">ID / Category</th>
-                  <th className="px-4 py-3">Priority</th>
-                  <th className="px-4 py-3">Overdue By</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    No active tickets to track.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {overdueTickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{ticket.id}</p>
-                      <p className="text-xs text-gray-500">{ticket.category}</p>
+              ) : (
+                sortedSlaData.map(ticket => (
+                  <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-gray-900">{ticket.title}</p>
+                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                        {ticket.status} • {new Date(ticket.created_at).toLocaleDateString()}
+                      </p>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${ticket.priority === 'P1' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {ticket.priority}
-                      </span>
+                    <td className="px-6 py-4 font-medium text-gray-700">
+                      {ticket.department?.name || 'Unassigned'}
                     </td>
-                    <td className="px-4 py-3 text-red-600 font-medium">
-                      {ticket.due}
+                    <td className="px-6 py-4">
+                      <span className="font-bold text-gray-700 uppercase text-xs">{ticket.priority}</span>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <button className="text-xs px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 font-medium">
-                        Force Escalate
-                      </button>
+                    <td className="px-6 py-4">
+                      {ticket.slaStatus === 'OVERDUE' && (
+                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold uppercase flex items-center gap-1 w-max">
+                          <AlertTriangle size={12} /> Overdue
+                        </span>
+                      )}
+                      {ticket.slaStatus === 'AT_RISK' && (
+                        <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold uppercase flex items-center gap-1 w-max">
+                          <Clock size={12} /> At Risk
+                        </span>
+                      )}
+                      {ticket.slaStatus === 'HEALTHY' && (
+                        <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold uppercase flex items-center gap-1 w-max">
+                          <CheckCircle size={12} /> Healthy
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {ticket.hoursRemaining < 0 ? (
+                        <span className="text-red-600 font-bold">Overdue by {Math.abs(Math.round(ticket.hoursRemaining))} hrs</span>
+                      ) : (
+                        <span className="text-gray-700 font-medium">{Math.round(ticket.hoursRemaining)} hrs remaining</span>
+                      )}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Pending Tickets Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-amber-500" />
-              Approaching Deadline
-            </h2>
-            <button className="text-sm text-blue-600 font-medium hover:text-blue-800">View All</button>
-          </div>
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3">ID / Category</th>
-                  <th className="px-4 py-3">Department</th>
-                  <th className="px-4 py-3">Due In</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {pendingTickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{ticket.id}</p>
-                      <p className="text-xs text-gray-500">{ticket.category}</p>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {ticket.department}
-                    </td>
-                    <td className="px-4 py-3 text-amber-600 font-medium">
-                      {ticket.due}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-
-      {/* Escalation Rules Config */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Active Escalation Rules</h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <div>
-              <h4 className="font-medium text-gray-900 flex items-center">
-                P1 Critical Breach <ArrowUpRight className="h-4 w-4 ml-2 text-gray-400" />
-              </h4>
-              <p className="text-sm text-gray-500 mt-1">If a P1 ticket is overdue by 2 hours, automatically escalate to Department Head.</p>
-            </div>
-            <div className="flex items-center">
-              <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                <input type="checkbox" name="toggle" id="toggle1" checked readOnly className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-blue-500 translate-x-5" />
-                <label htmlFor="toggle1" className="toggle-label block overflow-hidden h-5 rounded-full bg-blue-500 cursor-pointer"></label>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <div>
-              <h4 className="font-medium text-gray-900 flex items-center">
-                Repeated Overdue Warning <ArrowUpRight className="h-4 w-4 ml-2 text-gray-400" />
-              </h4>
-              <p className="text-sm text-gray-500 mt-1">If an Officer has &gt;5 overdue tickets, notify Administrator and Dept Head.</p>
-            </div>
-            <div className="flex items-center">
-              <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                <input type="checkbox" name="toggle" id="toggle2" checked readOnly className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-blue-500 translate-x-5" />
-                <label htmlFor="toggle2" className="toggle-label block overflow-hidden h-5 rounded-full bg-blue-500 cursor-pointer"></label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 }

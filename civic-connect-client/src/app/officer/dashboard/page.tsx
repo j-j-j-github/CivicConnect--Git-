@@ -18,7 +18,8 @@ import {
   MapPin, 
   CheckSquare, 
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Bell
 } from 'lucide-react';
 
 interface UserDetail {
@@ -56,6 +57,10 @@ interface Complaint {
   description: string;
   status: 'PENDING' | 'VERIFIED' | 'RESOLVED' | 'REJECTED';
   priority: string;
+  ai_category?: string;
+  ai_priority?: string;
+  ai_summary?: string;
+  ai_confidence?: number;
   location_lat: number | null;
   location_lng: number | null;
   media_urls: string[];
@@ -83,6 +88,8 @@ export default function OfficerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   
   // Note inputs
   const [newNote, setNewNote] = useState('');
@@ -145,6 +152,15 @@ export default function OfficerDashboard() {
           const specificDeptData = await specificDeptRes.json();
           setDeptOfficers(specificDeptData.officers || []);
         }
+      }
+
+      // 5. Fetch notifications
+      const notifRes = await fetch('http://localhost:3001/api/v1/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (notifRes.ok) {
+        const notifData = await notifRes.json();
+        setNotifications(notifData);
       }
 
     } catch (err: any) {
@@ -277,6 +293,20 @@ export default function OfficerDashboard() {
     }
   };
 
+  const handleMarkNotificationRead = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/v1/notifications/${id}/read`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      }
+    } catch (err) {
+      console.error('Error marking notification read', err);
+    }
+  };
+
   // Stats computation
   const pendingCount = complaints.filter(c => c.status === 'PENDING').length;
   const progressCount = complaints.filter(c => c.status === 'VERIFIED').length;
@@ -300,12 +330,60 @@ export default function OfficerDashboard() {
           <Building2 size={28} className="text-orange-400 animate-pulse" />
           <h1 className="text-2xl font-black tracking-tight uppercase">CivicConnect <span className="text-orange-400 font-bold text-lg">Department Portal</span></h1>
         </div>
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-xl text-sm font-extrabold transition-all border border-white/20 hover:scale-105 active:scale-95"
-        >
-          <LogOut size={16} /> Logout
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors border border-white/20"
+            >
+              <Bell size={18} />
+              {notifications.filter(n => !n.is_read).length > 0 && (
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#042B6B]"></span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                  <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
+                  <span className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-md">
+                    {notifications.filter(n => !n.is_read).length} New
+                  </span>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
+                  ) : (
+                    <div className="divide-y divide-gray-50">
+                      {notifications.map(n => (
+                        <div 
+                          key={n.id} 
+                          onClick={() => {
+                            if (!n.is_read) handleMarkNotificationRead(n.id);
+                          }}
+                          className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${!n.is_read ? 'bg-blue-50/30' : ''}`}
+                        >
+                          <p className={`text-sm ${!n.is_read ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>
+                            {n.message}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">
+                            {new Date(n.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-xl text-sm font-extrabold transition-all border border-white/20 hover:scale-105 active:scale-95"
+          >
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -511,6 +589,22 @@ export default function OfficerDashboard() {
                   <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm whitespace-pre-wrap">{selectedComplaint.description}</p>
                 </div>
 
+                {selectedComplaint.ai_summary && (
+                  <div>
+                    <h3 className="text-xs font-black text-blue-500 uppercase tracking-wider mb-2 flex items-center gap-1"><ShieldAlert size={14} /> AI Analysis</h3>
+                    <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50 space-y-3">
+                      <p className="text-gray-700 text-sm leading-relaxed">{selectedComplaint.ai_summary}</p>
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-100/50">
+                        <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-md">Category: {selectedComplaint.ai_category}</span>
+                        <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-md">Suggested Priority: {selectedComplaint.ai_priority}</span>
+                        {selectedComplaint.ai_confidence && (
+                          <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-md">Confidence: {Math.round(selectedComplaint.ai_confidence * 100)}%</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Submitted By</h3>
@@ -634,7 +728,7 @@ export default function OfficerDashboard() {
                               placeholder="Detail the work done to resolve this grievance..."
                               value={resolutionDesc}
                               onChange={e => setResolutionDesc(e.target.value)}
-                              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-green-600 focus:outline-none"
+                              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-500 focus:border-green-600 focus:outline-none"
                             ></textarea>
                           </div>
 
@@ -645,7 +739,7 @@ export default function OfficerDashboard() {
                               placeholder="e.g. http://minio-url/evidence.jpg"
                               value={resolutionImg}
                               onChange={e => setResolutionImg(e.target.value)}
-                              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-green-600 focus:outline-none"
+                              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-500 focus:border-green-600 focus:outline-none"
                             />
                           </div>
 
@@ -758,7 +852,7 @@ export default function OfficerDashboard() {
                   placeholder="Post internal collab note..."
                   value={newNote}
                   onChange={e => setNewNote(e.target.value)}
-                  className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-[#042B6B] shadow-sm"
+                  className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#042B6B] shadow-sm"
                 />
                 <button
                   type="submit"

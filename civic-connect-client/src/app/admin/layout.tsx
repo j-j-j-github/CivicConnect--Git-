@@ -28,14 +28,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: BarChart3 },
-    { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Departments', href: '/admin/departments', icon: Building2 },
     { name: 'Officers', href: '/admin/officers', icon: User },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'SLA Tracking', href: '/admin/sla', icon: Clock },
-    { name: 'Audit Logs', href: '/admin/audit-logs', icon: ShieldAlert },
-    { name: 'Reports', href: '/admin/reports', icon: FileText },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
   return (
@@ -87,15 +83,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
           
-          <div className="hidden md:flex items-center bg-gray-100 px-3 py-2 rounded-lg w-96">
-            <Search className="h-4 w-4 text-gray-400 mr-2" />
-            <input 
-              type="text" 
-              placeholder="Search users, tickets, or settings..." 
-              className="bg-transparent border-none outline-none text-sm w-full"
-            />
-          </div>
-
           <div className="flex items-center space-x-4">
             <button className="relative text-gray-400 hover:text-gray-600">
               <Bell className="h-5 w-5" />

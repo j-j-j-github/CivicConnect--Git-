@@ -1,92 +1,122 @@
-import React from 'react';
-import { Search, Plus, Filter, User } from 'lucide-react';
+'use client';
 
-export default function OfficersPage() {
-  const officers = [
-    { id: 1, name: 'Alex Johnson', department: 'Traffic & Transport', casesAssigned: 12, casesResolved: 450, rating: 4.8 },
-    { id: 2, name: 'Maria Garcia', department: 'Public Works', casesAssigned: 8, casesResolved: 310, rating: 4.5 },
-    { id: 3, name: 'Robert Chen', department: 'Water & Sanitation', casesAssigned: 24, casesResolved: 890, rating: 4.9 },
-    { id: 4, name: 'Linda Smith', department: 'Parks & Recreation', casesAssigned: 3, casesResolved: 120, rating: 4.2 },
-    { id: 5, name: 'James Wilson', department: 'Electrical Board', casesAssigned: 15, casesResolved: 275, rating: 4.6 },
-  ];
+import React, { useEffect, useState } from 'react';
+import { User, ShieldAlert, Phone, Mail, Building2, Search } from 'lucide-react';
+import Cookies from 'js-cookie';
+
+export default function OfficersDashboard() {
+  const [officers, setOfficers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchOfficers();
+  }, []);
+
+  const fetchOfficers = async () => {
+    try {
+      const token = Cookies.get('token');
+      const res = await fetch('http://localhost:3001/api/v1/admin/officers', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOfficers(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading officers...</div>;
+
+  const filteredOfficers = officers.filter(o => 
+    o.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    o.citizenProfile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.department?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Officer Management</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage departmental officers and their assigned jurisdictions.</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <ShieldAlert className="text-blue-600" /> Officers Directory
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">Manage platform officers and their department assignments.</p>
         </div>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Assign Officer
-        </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50/50">
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+          <div className="relative w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input 
               type="text" 
-              placeholder="Search officers..." 
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search officers or departments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
             />
           </div>
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <button className="flex items-center px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 bg-white w-full sm:w-auto justify-center">
-              <Filter className="h-4 w-4 mr-2 text-gray-500" />
-              Filter by Department
-            </button>
-          </div>
         </div>
-
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
               <tr>
-                <th className="px-6 py-4">Officer Details</th>
-                <th className="px-6 py-4">Department</th>
-                <th className="px-6 py-4">Current Caseload</th>
-                <th className="px-6 py-4">Total Resolved</th>
-                <th className="px-6 py-4">Citizen Rating</th>
+                <th className="px-6 py-4 font-bold">Officer Details</th>
+                <th className="px-6 py-4 font-bold">Department</th>
+                <th className="px-6 py-4 font-bold">Role</th>
+                <th className="px-6 py-4 font-bold">Joined Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {officers.map((officer) => (
-                <tr key={officer.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-semibold border border-blue-100 mr-3">
-                        <User className="h-4 w-4" />
-                      </div>
-                      <span className="font-medium text-gray-900">{officer.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {officer.department}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <span className={`font-semibold ${officer.casesAssigned > 20 ? 'text-red-600' : 'text-gray-900'}`}>
-                        {officer.casesAssigned}
-                      </span>
-                      <span className="text-gray-500 ml-1">active cases</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {officer.casesResolved}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-900 mr-1">{officer.rating}</span>
-                      <span className="text-yellow-400">★</span>
-                    </div>
+              {filteredOfficers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    No officers found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredOfficers.map(officer => (
+                  <tr key={officer.id} className="hover:bg-blue-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold">
+                          <User size={18} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">{officer.citizenProfile?.full_name || 'Unregistered Name'}</p>
+                          <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Mail size={12}/> {officer.email}</p>
+                          {officer.citizenProfile?.phone && (
+                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Phone size={12}/> {officer.citizenProfile.phone}</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {officer.department ? (
+                        <span className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-semibold w-max border border-blue-100">
+                          <Building2 size={14} />
+                          {officer.department.name}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 italic text-sm">Unassigned</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-1 bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-xs rounded">
+                        OFFICER
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-500 font-medium">
+                      {new Date(officer.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

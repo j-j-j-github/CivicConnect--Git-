@@ -58,8 +58,10 @@ export class ComplaintsService {
   }
 
   /** Returns all complaints with full details for officer/admin portal. */
-  async getAllComplaints() {
+  async getAllComplaints(user: any) {
+    const whereClause = user.role === 'ADMIN' ? {} : { department_id: user.department_id };
     return this.prisma.complaint.findMany({
+      where: whereClause,
       orderBy: { created_at: 'desc' },
       select: {
         id: true,
@@ -85,8 +87,53 @@ export class ComplaintsService {
         citizen: { select: { id: true, email: true, citizenProfile: { select: { full_name: true } } } },
         department: { select: { id: true, name: true } },
         feedback: { select: { rating: true, comments: true } },
+        assigned_officer_id: true,
+        assigned_officer: { select: { id: true, email: true } },
+        internal_notes: {
+          select: { id: true, note: true, created_at: true, officer: { select: { id: true, email: true } } },
+          orderBy: { created_at: 'asc' }
+        }
       },
     });
+  }
+
+  async getComplaintById(id: string) {
+    const complaint = await this.prisma.complaint.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        location_lat: true,
+        location_lng: true,
+        media_urls: true,
+        created_at: true,
+        // AI fields
+        ai_category: true,
+        ai_department: true,
+        ai_priority: true,
+        ai_confidence: true,
+        ai_summary: true,
+        is_ai_overridden: true,
+        override_reason: true,
+        overridden_at: true,
+        overriddenById: true,
+        // Relations
+        citizen: { select: { id: true, email: true, citizenProfile: { select: { full_name: true } } } },
+        department: { select: { id: true, name: true } },
+        feedback: { select: { rating: true, comments: true } },
+        assigned_officer_id: true,
+        assigned_officer: { select: { id: true, email: true } },
+        internal_notes: {
+          select: { id: true, note: true, created_at: true, officer: { select: { id: true, email: true } } },
+          orderBy: { created_at: 'asc' }
+        }
+      },
+    });
+    if (!complaint) throw new NotFoundException('Complaint not found');
+    return complaint;
   }
 
   /** Updates complaint status and notifies the citizen. Officer/admin only. */

@@ -21,8 +21,15 @@ export class ComplaintsController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.OFFICER)
   @Get()
-  async getAllComplaints() {
-    return this.complaintsService.getAllComplaints();
+  async getAllComplaints(@Req() req: any) {
+    return this.complaintsService.getAllComplaints(req.user);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @Get(':id')
+  async getComplaintById(@Param('id') id: string) {
+    return this.complaintsService.getComplaintById(id);
   }
 
   @Post()
