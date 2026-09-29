@@ -45,28 +45,24 @@ export default function Home() {
         className="flex-1 flex flex-col items-center justify-center p-8 lg:p-24 text-center relative bg-cover bg-center"
         style={{ backgroundImage: "url('/smartcity.jpg')" }}
       >
-        {/* Dark / Blue overlays for readability */}
-        <div className="absolute inset-0 bg-[#042B6B]/70 mix-blend-multiply"></div>
-        <div className="absolute inset-0 bg-black/40"></div>
-        
-        <div className="max-w-4xl w-full space-y-8 relative z-10">
-          <h2 className="text-5xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] drop-shadow-lg">
-            Empowering Citizens for a <span className="text-blue-300">Smarter City</span>
+        <div className="max-w-4xl w-full space-y-8 relative z-10 p-8 bg-white/40 backdrop-blur-md rounded-3xl border border-white/50 shadow-xl">
+          <h2 className="text-5xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1]">
+            Empowering Citizens for a <span className="text-[#042B6B]">Smarter City</span>
           </h2>
-          <p className="text-xl text-blue-50 max-w-2xl mx-auto leading-relaxed font-medium drop-shadow-md">
+          <p className="text-xl text-gray-800 max-w-2xl mx-auto leading-relaxed font-bold">
             Welcome to the unified civic intelligence platform. Seamlessly report issues, track resolutions, and collaborate with municipal departments to improve our community.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-10">
             <Link 
               href="/auth/register" 
-              className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-gray-100 text-[#042B6B] font-bold rounded-xl shadow-lg shadow-black/20 transition-all text-lg"
+              className="w-full sm:w-auto px-8 py-4 bg-[#042B6B] hover:bg-[#031d4a] text-white font-bold rounded-xl shadow-lg shadow-blue-900/20 transition-all text-lg border border-transparent"
             >
               Register as Citizen
             </Link>
             <Link 
               href="/auth/login" 
-              className="w-full sm:w-auto px-8 py-4 bg-transparent text-white border-2 border-white hover:bg-white/10 font-bold rounded-xl shadow-sm transition-all text-lg backdrop-blur-sm"
+              className="w-full sm:w-auto px-8 py-4 bg-white text-[#042B6B] border-2 border-[#042B6B] hover:bg-gray-50 font-bold rounded-xl shadow-sm transition-all text-lg"
             >
               Access Portal
             </Link>
