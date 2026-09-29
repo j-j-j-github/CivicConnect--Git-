@@ -90,8 +90,8 @@ model Complaint {
   citizen_id String
   citizen    User   @relation("ComplaintCitizen", fields: [citizen_id], references: [id])
 
-  department_id String
-  department    Department @relation(fields: [department_id], references: [id])
+  department_id String?
+  department    Department? @relation(fields: [department_id], references: [id])
 
   // Department-Module fields
   assigned_officer_id String?

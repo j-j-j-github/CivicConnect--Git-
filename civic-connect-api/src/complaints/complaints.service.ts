@@ -251,14 +251,8 @@ export class ComplaintsService {
     });
 
     if (!department) {
-      console.warn(`AI Recommended department '${aiDepartmentName}' not found. Using fallback.`);
-      department = await this.prisma.department.findFirst({ where: { name: 'General' } });
-      if (!department) {
-        department = await this.prisma.department.findFirst(); // Ultimate fallback
-        if (!department) {
-            throw new BadRequestException('No departments exist in the system.');
-        }
-      }
+      console.warn(`AI Recommended department '${aiDepartmentName}' not found. Marking as unassigned.`);
+      department = null;
     }
 
     const priority = aiResponse ? aiResponse.priority : 'LOW';
@@ -274,7 +268,7 @@ export class ComplaintsService {
         location_lng: data.longitude,
         media_urls: data.media_urls || [],
         citizen_id: userId,
-        department_id: department.id,
+        department_id: department ? department.id : null,
         
         // AI specific fields
         ai_category: aiResponse ? aiResponse.category : null,
