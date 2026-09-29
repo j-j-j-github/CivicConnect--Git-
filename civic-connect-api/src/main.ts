@@ -19,6 +19,11 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
+  // Increase JSON & URL-encoded payload limit for base64 image uploads
+  const express = require('express');
+  app.use(express.json({ limit: '25mb' }));
+  app.use(express.urlencoded({ limit: '25mb', extended: true }));
+
   // Global validation pipe for validating incoming DTOs
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 

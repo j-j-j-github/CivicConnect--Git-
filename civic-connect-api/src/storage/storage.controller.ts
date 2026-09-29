@@ -9,7 +9,9 @@ export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25MB
+  }))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     const url = await this.storageService.uploadFile(file);
     return { url };

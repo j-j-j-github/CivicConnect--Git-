@@ -64,15 +64,56 @@ export default function ProfilePage() {
     }
   };
 
+  const compressAvatar = (file: File): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 400;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = Math.round(height * (MAX_SIZE / width));
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = Math.round(width * (MAX_SIZE / height));
+              height = MAX_SIZE;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => resolve(blob || file),
+            'image/jpeg',
+            0.85
+          );
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
     
     setUploadingImage(true);
-    const formData = new FormData();
-    formData.append('file', file);
     
     try {
+      const processedBlob = await compressAvatar(file);
+      const formData = new FormData();
+      formData.append('file', processedBlob, 'avatar.jpg');
+
       const response = await fetchApi('/storage/upload', {
         method: 'POST',
         body: formData,
@@ -88,9 +129,9 @@ export default function ProfilePage() {
           body: JSON.stringify({ ...profile, profile_image_url: url }),
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to upload image', error);
-      alert('Failed to upload image. Please try again.');
+      alert(error.message || 'Failed to upload image. Please try again.');
     } finally {
       setUploadingImage(false);
     }
