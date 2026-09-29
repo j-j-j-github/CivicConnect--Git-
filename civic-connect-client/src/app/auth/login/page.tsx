@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 import { Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,8 +21,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-      const res = await fetch(`${apiUrl}/auth/login`, {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

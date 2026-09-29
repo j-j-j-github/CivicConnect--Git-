@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Clock, AlertTriangle, ShieldAlert, CheckCircle } from 'lucide-react';
 import Cookies from 'js-cookie';
+import { API_URL } from '@/lib/api';
 
 export default function SlaTrackingDashboard() {
   const [complaints, setComplaints] = useState<any[]>([]);
@@ -15,7 +16,7 @@ export default function SlaTrackingDashboard() {
   const fetchData = async () => {
     try {
       const token = Cookies.get('token');
-      const compRes = await fetch('http://localhost:3001/api/v1/complaints', {
+      const compRes = await fetch(`${API_URL}/complaints`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (compRes.ok) {

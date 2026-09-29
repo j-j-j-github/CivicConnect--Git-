@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Building2, Search, Bell, ShieldAlert, CheckCircle, FileWarning, ArrowLeft, Send, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { API_URL } from '@/lib/api';
 
 export default function DepartmentsManagement() {
   const [departments, setDepartments] = useState<any[]>([]);
@@ -31,18 +32,16 @@ export default function DepartmentsManagement() {
         return;
       }
 
-      // Fetch stats to get departments
-      const statsRes = await fetch('http://localhost:3001/api/v1/admin/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!statsRes.ok) throw new Error('Failed to fetch departments');
-      const statsData = await statsRes.json();
-      setDepartments(statsData.departments);
+      // Fetch stats and complaints concurrently
+      const [statsRes, compRes] = await Promise.all([
+        fetch(`${API_URL}/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_URL}/complaints`, { headers: { 'Authorization': `Bearer ${token}` } })
+      ]);
 
-      // Fetch all complaints
-      const compRes = await fetch('http://localhost:3001/api/v1/complaints', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setDepartments(statsData.departments);
+      }
       if (compRes.ok) {
         const compData = await compRes.json();
         setComplaints(compData);
@@ -61,7 +60,7 @@ export default function DepartmentsManagement() {
     setIsSending(true);
     try {
       const token = Cookies.get('token');
-      const res = await fetch(`http://localhost:3001/api/v1/admin/message-department/${selectedDept.id}`, {
+      const res = await fetch(`${API_URL}/admin/message-department/${selectedDept.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

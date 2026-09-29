@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { BarChart3, Map, Activity } from 'lucide-react';
 import Cookies from 'js-cookie';
 import dynamic from 'next/dynamic';
+import { API_URL } from '@/lib/api';
 
 // Dynamically import the map to prevent SSR issues
 const LiveMap = dynamic(() => import('@/components/map/LiveMap'), { ssr: false });
@@ -19,7 +20,7 @@ export default function AnalyticsDashboard() {
   const fetchData = async () => {
     try {
       const token = Cookies.get('token');
-      const compRes = await fetch('http://localhost:3001/api/v1/complaints', {
+      const compRes = await fetch(`${API_URL}/complaints`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (compRes.ok) {

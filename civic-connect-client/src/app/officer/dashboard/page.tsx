@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { API_URL } from '@/lib/api';
 import { 
   Building2, 
   Clock, 
@@ -117,7 +118,7 @@ export default function OfficerDashboard() {
       setError('');
 
       // 1. Get current officer info
-      const meRes = await fetch('http://localhost:3001/api/v1/auth/me', {
+      const meRes = await fetch(`${API_URL}/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -125,42 +126,26 @@ export default function OfficerDashboard() {
       const meData = await meRes.json();
       setOfficerInfo(meData);
 
-      // 2. Fetch assigned complaints
-      const compRes = await fetch('http://localhost:3001/api/v1/complaints', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (compRes.ok) {
-        const compData = await compRes.json();
-        setComplaints(compData);
-      }
+      // 2. Fetch assigned complaints, departments, and notifications concurrently
+      const [compRes, deptRes, notifRes, specificDeptRes] = await Promise.allSettled([
+        fetch(`${API_URL}/complaints`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_URL}/departments`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_URL}/notifications`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        meData.department_id ? fetch(`${API_URL}/departments/${meData.department_id}`, { headers: { 'Authorization': `Bearer ${token}` } }) : Promise.reject()
+      ]);
 
-      // 3. Fetch all departments (for reassignment)
-      const deptRes = await fetch('http://localhost:3001/api/v1/departments', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (deptRes.ok) {
-        const deptData = await deptRes.json();
-        setDepartments(deptData);
+      if (compRes.status === 'fulfilled' && compRes.value.ok) {
+        setComplaints(await compRes.value.json());
       }
-
-      // 4. Fetch department officers (for officer assignment)
-      if (meData.department_id) {
-        const specificDeptRes = await fetch(`http://localhost:3001/api/v1/departments/${meData.department_id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (specificDeptRes.ok) {
-          const specificDeptData = await specificDeptRes.json();
-          setDeptOfficers(specificDeptData.officers || []);
-        }
+      if (deptRes.status === 'fulfilled' && deptRes.value.ok) {
+        setDepartments(await deptRes.value.json());
       }
-
-      // 5. Fetch notifications
-      const notifRes = await fetch('http://localhost:3001/api/v1/notifications', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (notifRes.ok) {
-        const notifData = await notifRes.json();
-        setNotifications(notifData);
+      if (notifRes.status === 'fulfilled' && notifRes.value.ok) {
+        setNotifications(await notifRes.value.json());
+      }
+      if (specificDeptRes.status === 'fulfilled' && specificDeptRes.value.ok) {
+        const specificDeptData = await specificDeptRes.value.json();
+        setDeptOfficers(specificDeptData.officers || []);
       }
 
     } catch (err: any) {
@@ -176,7 +161,7 @@ export default function OfficerDashboard() {
 
   const refreshSelectedComplaint = async (complaintId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/complaints/${complaintId}`, {
+      const res = await fetch(`${API_URL}/complaints/${complaintId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -205,7 +190,7 @@ export default function OfficerDashboard() {
         }
       }
 
-      const res = await fetch(`http://localhost:3001/api/v1/complaints/${id}/status`, {
+      const res = await fetch(`${API_URL}/complaints/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +218,7 @@ export default function OfficerDashboard() {
     if (!selectedComplaint || !newNote.trim()) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/complaints/${selectedComplaint.id}/notes`, {
+      const res = await fetch(`${API_URL}/complaints/${selectedComplaint.id}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -254,7 +239,7 @@ export default function OfficerDashboard() {
   const handleAssignOfficer = async (officerId: string) => {
     if (!selectedComplaint) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/complaints/${selectedComplaint.id}/assign-officer`, {
+      const res = await fetch(`${API_URL}/complaints/${selectedComplaint.id}/assign-officer`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +259,7 @@ export default function OfficerDashboard() {
     if (!selectedComplaint) return;
     if (!confirm('Are you sure you want to reassign this complaint to another department? It will no longer appear on your dashboard.')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/complaints/${selectedComplaint.id}/reassign-department`, {
+      const res = await fetch(`${API_URL}/complaints/${selectedComplaint.id}/reassign-department`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -295,7 +280,7 @@ export default function OfficerDashboard() {
 
   const handleMarkNotificationRead = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/notifications/${id}/read`, {
+      const res = await fetch(`${API_URL}/notifications/${id}/read`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });

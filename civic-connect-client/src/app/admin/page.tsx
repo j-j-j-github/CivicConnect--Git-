@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Users, FileWarning, CheckCircle, Clock, Bell, Send, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { API_URL } from '@/lib/api';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -27,7 +28,7 @@ export default function AdminDashboard() {
         router.push('/auth/login');
         return;
       }
-      const res = await fetch('http://localhost:3001/api/v1/admin/stats', {
+      const res = await fetch(`${API_URL}/admin/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch stats');
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
     setIsSending(true);
     try {
       const token = Cookies.get('token');
-      const res = await fetch(`http://localhost:3001/api/v1/admin/message-department/${selectedDeptId}`, {
+      const res = await fetch(`${API_URL}/admin/message-department/${selectedDeptId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

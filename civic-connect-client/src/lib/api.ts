@@ -1,4 +1,8 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+    ? 'https://civicconnect-git.onrender.com/api/v1'
+    : 'http://localhost:3001/api/v1');
 
 export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
   const token = getCookie('token');

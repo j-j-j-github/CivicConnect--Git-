@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, ShieldAlert, Phone, Mail, Building2, Search } from 'lucide-react';
 import Cookies from 'js-cookie';
+import { API_URL } from '@/lib/api';
 
 export default function OfficersDashboard() {
   const [officers, setOfficers] = useState<any[]>([]);
@@ -16,7 +17,7 @@ export default function OfficersDashboard() {
   const fetchOfficers = async () => {
     try {
       const token = Cookies.get('token');
-      const res = await fetch('http://localhost:3001/api/v1/admin/officers', {
+      const res = await fetch(`${API_URL}/admin/officers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
