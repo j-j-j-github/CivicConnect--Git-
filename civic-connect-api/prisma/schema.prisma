@@ -27,6 +27,7 @@ model User {
   email         String   @unique
   password_hash String
   role          Role     @default(CITIZEN)
+  full_name     String?
   created_at    DateTime @default(now())
 
   complaints          Complaint[] @relation("ComplaintCitizen")
@@ -49,6 +50,7 @@ model CitizenProfile {
   full_name String
   phone     String?
   address   String?
+  profile_image_url String?
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }

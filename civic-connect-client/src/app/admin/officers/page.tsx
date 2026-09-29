@@ -89,7 +89,7 @@ export default function OfficersDashboard() {
                           <User size={18} />
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900">{officer.citizenProfile?.full_name || 'Unregistered Name'}</p>
+                          <p className="font-bold text-gray-900">{officer.full_name || officer.citizenProfile?.full_name || 'Unregistered Name'}</p>
                           <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Mail size={12}/> {officer.email}</p>
                           {officer.citizenProfile?.phone && (
                             <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Phone size={12}/> {officer.citizenProfile.phone}</p>

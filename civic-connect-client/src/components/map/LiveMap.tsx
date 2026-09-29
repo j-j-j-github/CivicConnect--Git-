@@ -17,8 +17,8 @@ const icon = L.icon({
 });
 
 export default function LiveMap({ incidents }: { incidents: any[] }) {
-  // Default center (e.g. New York or user's city)
-  const center: [number, number] = [40.7128, -74.0060];
+  // Default center (e.g. Kerala, India)
+  const center: [number, number] = [10.8505, 76.2711];
 
   return (
     <MapContainer 

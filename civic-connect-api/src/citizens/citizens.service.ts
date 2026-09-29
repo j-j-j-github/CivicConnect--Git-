@@ -35,6 +35,7 @@ export class CitizensService {
         full_name: data.full_name !== undefined ? data.full_name : profile.full_name,
         phone: data.phone !== undefined ? data.phone : profile.phone,
         address: data.address !== undefined ? data.address : profile.address,
+        profile_image_url: data.profile_image_url !== undefined ? data.profile_image_url : profile.profile_image_url,
       },
     });
 

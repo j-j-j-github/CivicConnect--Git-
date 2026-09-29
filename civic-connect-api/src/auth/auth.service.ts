@@ -172,4 +172,14 @@ export class AuthService {
     const { password_hash, ...result } = user;
     return result;
   }
+
+  async updateProfile(userId: string, full_name: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { full_name },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password_hash, ...result } = user;
+    return result;
+  }
 }

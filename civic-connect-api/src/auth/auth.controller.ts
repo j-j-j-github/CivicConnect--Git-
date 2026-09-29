@@ -45,4 +45,10 @@ export class AuthController {
   async getMe(@Req() req: any) {
     return this.authService.getMe(req.user.id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile')
+  async updateProfile(@Req() req: any, @Body() body: any) {
+    return this.authService.updateProfile(req.user.id, body.full_name);
+  }
 }

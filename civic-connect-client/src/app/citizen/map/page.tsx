@@ -16,8 +16,8 @@ const LiveMap = dynamic(() => import('../../../components/map/LiveMap'), {
 
 // Mock initial incidents for the map
 const initialIncidents = [
-  { id: '1', lat: 40.7128, lng: -74.0060, title: 'Pothole on Main St' },
-  { id: '2', lat: 40.7150, lng: -74.0020, title: 'Broken Streetlight' },
+  { id: '1', lat: 10.8505, lng: 76.2711, title: 'Road Damage' },
+  { id: '2', lat: 9.9312, lng: 76.2673, title: 'Water Leak' },
 ];
 
 export default function MapPage() {

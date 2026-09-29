@@ -13,10 +13,12 @@ export default function ProfilePage() {
     full_name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    profile_image_url: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Password modal states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -34,7 +36,8 @@ export default function ProfilePage() {
             full_name: data.citizenProfile?.full_name || '',
             email: data.email || '',
             phone: data.citizenProfile?.phone || '',
-            address: data.citizenProfile?.address || ''
+            address: data.citizenProfile?.address || '',
+            profile_image_url: data.citizenProfile?.profile_image_url || ''
           });
         }
       } catch (error) {
@@ -58,6 +61,38 @@ export default function ProfilePage() {
       console.error('Failed to update profile', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await fetchApi('/storage/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      // response is usually the plain URL string or an object with url depending on backend
+      const url = typeof response === 'string' ? response : (response.url || response.path || response);
+      setProfile(prev => ({ ...prev, profile_image_url: url }));
+      
+      // Auto-save the profile when image changes if not in edit mode
+      if (!isEditing) {
+        await fetchApi('/citizens/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ ...profile, profile_image_url: url }),
+        });
+      }
+    } catch (error) {
+      console.error('Failed to upload image', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -119,11 +154,19 @@ export default function ProfilePage() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 border-b border-gray-100">
-          <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center border-4 border-white shadow-md relative flex-shrink-0">
-            <UserCircle size={80} className="text-[#042B6B]" />
-            <button className="absolute bottom-0 right-0 bg-white border border-gray-200 rounded-full p-2 shadow-sm text-gray-600 hover:text-blue-600 transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-            </button>
+          <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center border-4 border-white shadow-md relative flex-shrink-0 overflow-hidden">
+            {profile.profile_image_url ? (
+               <img src={profile.profile_image_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+               <UserCircle size={80} className="text-[#042B6B]" />
+            )}
+            
+            <label className="absolute bottom-0 right-0 bg-white border border-gray-200 rounded-full p-2 shadow-sm text-gray-600 hover:text-blue-600 transition-colors cursor-pointer z-10" title="Upload Picture">
+              {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+            </label>
           </div>
           <div className="text-center md:text-left flex-1 w-full">
             {isEditing ? (

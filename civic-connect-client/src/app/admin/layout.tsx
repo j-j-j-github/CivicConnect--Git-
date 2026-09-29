@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
@@ -20,6 +20,45 @@ import {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const [adminInfo, setAdminInfo] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const token = Cookies.get('token');
+        if (!token) return;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://civicconnect-git.onrender.com/api/v1' : 'http://localhost:3001/api/v1');
+        const res = await fetch(`${apiUrl}/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          setAdminInfo(await res.json());
+        }
+      } catch (err) {}
+    };
+    fetchMe();
+  }, []);
+
+  const handleUpdateName = async () => {
+    const newName = window.prompt("Enter your full name:", adminInfo?.full_name || "");
+    if (newName && newName.trim() !== "") {
+      try {
+        const token = Cookies.get('token');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://civicconnect-git.onrender.com/api/v1' : 'http://localhost:3001/api/v1');
+        const res = await fetch(`${apiUrl}/auth/profile`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ full_name: newName.trim() })
+        });
+        if (res.ok) {
+          setAdminInfo((prev: any) => ({ ...prev, full_name: newName.trim() }));
+        }
+      } catch(err) {}
+    }
+  };
 
   const handleLogout = () => {
     Cookies.remove('token');
@@ -58,15 +97,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
         </div>
         
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800 cursor-pointer hover:bg-slate-800 transition-colors" onClick={handleUpdateName} title="Click to update your name">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold">
-                A
+                {adminInfo?.full_name ? adminInfo.full_name[0].toUpperCase() : 'A'}
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium">Admin User</p>
-                <p className="text-xs text-slate-400">System Admin</p>
+                <p className="text-sm font-medium">{adminInfo?.full_name || 'Unregistered Name'}</p>
+                <p className="text-xs text-slate-400">{adminInfo?.role === 'ADMIN' ? 'System Admin' : 'Department Admin'}</p>
               </div>
             </div>
           </div>
@@ -84,10 +123,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           
           <div className="flex items-center space-x-4 ml-auto">
-            <button className="relative text-gray-400 hover:text-gray-600">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-            </button>
             <button onClick={handleLogout} className="text-gray-400 hover:text-gray-600 flex items-center text-sm font-medium border-l pl-4 border-gray-200">
               <LogOut className="h-4 w-4 mr-1" />
               Logout
