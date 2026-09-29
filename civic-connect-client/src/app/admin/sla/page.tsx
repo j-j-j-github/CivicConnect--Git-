@@ -36,10 +36,10 @@ export default function SlaTrackingDashboard() {
 
   // SLA Rules (hours)
   const slaRules: Record<string, number> = {
-    P1: 24,
-    P2: 48,
-    P3: 168, // 7 days
-    P4: 336  // 14 days
+    CRITICAL: 12,
+    HIGH: 24,
+    MEDIUM: 72,
+    LOW: 168
   };
 
   const activeComplaints = complaints.filter(c => c.status === 'PENDING' || c.status === 'VERIFIED');
