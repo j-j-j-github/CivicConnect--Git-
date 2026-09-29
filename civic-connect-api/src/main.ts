@@ -8,9 +8,9 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
-  // Enable CORS to allow requests from the Next.js frontend
+  // Enable CORS to allow requests from the Next.js frontend or any Netlify preview
   app.enableCors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: true,
     credentials: true,
   });
 
