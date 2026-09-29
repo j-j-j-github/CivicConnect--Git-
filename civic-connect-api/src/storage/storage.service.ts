@@ -30,7 +30,8 @@ export class StorageService {
 
       // Return public URL (assuming the backend serves it under /uploads/)
       const port = process.env.PORT || 3001;
-      const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+      const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true' || !!process.env.RENDER_EXTERNAL_URL;
+      const baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || (isProd ? 'https://civicconnect-git.onrender.com' : `http://localhost:${port}`);
       return `${baseUrl}/uploads/${fileName}`;
     } catch (error) {
       this.logger.error(`Failed to upload file to disk: ${error.message}`);
