@@ -114,6 +114,7 @@ export class AdminService {
       select: {
         id: true,
         email: true,
+        full_name: true,
         created_at: true,
         department: { select: { id: true, name: true } },
         citizenProfile: { select: { full_name: true, phone: true } }
