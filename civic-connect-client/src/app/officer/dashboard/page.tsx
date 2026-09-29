@@ -159,30 +159,6 @@ export default function OfficerDashboard() {
     fetchInitialData();
   }, []);
 
-  const handleUpdateName = async () => {
-    const currentName = officerInfo?.full_name || officerInfo?.citizenProfile?.full_name || "";
-    const newName = window.prompt("Enter your full name:", currentName);
-    if (newName && newName.trim() !== "") {
-      try {
-        const res = await fetch(`${API_URL}/auth/profile`, {
-          method: 'PATCH',
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ full_name: newName.trim() })
-        });
-        if (res.ok) {
-          setOfficerInfo((prev: any) => ({ ...prev, full_name: newName.trim() }));
-        } else {
-          alert('Failed to update name');
-        }
-      } catch(err) {
-        alert('Failed to update name');
-      }
-    }
-  };
-
   const refreshSelectedComplaint = async (complaintId: string) => {
     try {
       const res = await fetch(`${API_URL}/complaints/${complaintId}`, {
@@ -341,8 +317,8 @@ export default function OfficerDashboard() {
         </div>
         <div className="flex items-center gap-4">
           <button
-            onClick={handleUpdateName}
-            title="Edit Profile Name"
+            onClick={() => router.push('/officer/profile')}
+            title="View Profile"
             className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors border border-white/20 flex items-center justify-center"
           >
             <User size={18} />
