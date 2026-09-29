@@ -84,14 +84,6 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Admin Dashboard Overview</h1>
           <p className="text-sm text-gray-500 mt-1">Live data feed from database</p>
         </div>
-        <div className="flex space-x-3">
-          <Link href="/admin/reports" className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            Export Report
-          </Link>
-          <Link href="/admin/settings" className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
-            System Settings
-          </Link>
-        </div>
       </div>
 
       {/* Stats Grid */}
