@@ -21,20 +21,12 @@ export class StorageService {
       throw new BadRequestException('No file provided');
     }
 
-    const fileExtension = path.extname(file.originalname);
-    const fileName = `${uuidv4()}${fileExtension}`;
-    const filePath = path.join(this.uploadDir, fileName);
-
     try {
-      await fsPromises.writeFile(filePath, file.buffer);
-
-      // Return public URL (assuming the backend serves it under /uploads/)
-      const port = process.env.PORT || 3001;
-      const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true' || !!process.env.RENDER_EXTERNAL_URL;
-      const baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || (isProd ? 'https://civicconnect-git.onrender.com' : `http://localhost:${port}`);
-      return `${baseUrl}/uploads/${fileName}`;
+      const base64String = file.buffer.toString('base64');
+      const mimeType = file.mimetype || 'image/jpeg';
+      return `data:${mimeType};base64,${base64String}`;
     } catch (error) {
-      this.logger.error(`Failed to upload file to disk: ${error.message}`);
+      this.logger.error(`Failed to process file: ${error.message}`);
       throw new BadRequestException('File upload failed');
     }
   }

@@ -30,4 +30,10 @@ export class AdminController {
   async getOfficers() {
     return this.adminService.getOfficers();
   }
+
+  @Post('officers')
+  @Roles('ADMIN')
+  async addOfficer(@Body() body: { email: string; full_name: string; department_id: string; password?: string }) {
+    return this.adminService.addOfficer(body);
+  }
 }

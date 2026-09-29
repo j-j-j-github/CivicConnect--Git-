@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AdminService {
@@ -121,5 +122,38 @@ export class AdminService {
       },
       orderBy: { created_at: 'desc' }
     });
+  }
+
+  async addOfficer(data: { email: string; full_name: string; department_id: string; password_hash?: string; password?: string }) {
+    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
+    if (existing) {
+      throw new ConflictException('User with this email already exists');
+    }
+    
+    // Support either direct password_hash or raw password
+    const hashed = data.password ? await bcrypt.hash(data.password, 10) : data.password_hash;
+    
+    const user = await this.prisma.user.create({
+      data: {
+        email: data.email,
+        password_hash: hashed || await bcrypt.hash('officer123', 10), // default fallback
+        role: 'OFFICER',
+        full_name: data.full_name,
+        department_id: data.department_id,
+        citizenProfile: {
+          create: {
+            full_name: data.full_name,
+          }
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        full_name: true,
+        department: { select: { id: true, name: true } }
+      }
+    });
+    
+    return user;
   }
 }

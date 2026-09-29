@@ -1,18 +1,42 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User, ShieldAlert, Phone, Mail, Building2, Search } from 'lucide-react';
+import { User, ShieldAlert, Phone, Mail, Building2, Search, Plus, X, Loader2 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { API_URL } from '@/lib/api';
 
 export default function OfficersDashboard() {
   const [officers, setOfficers] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Add Officer State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ full_name: '', email: '', password: '', department_id: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
   useEffect(() => {
     fetchOfficers();
+    fetchDepartments();
   }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const token = Cookies.get('token');
+      const res = await fetch(`${API_URL}/departments`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDepartments(data);
+        if (data.length > 0) setFormData(prev => ({ ...prev, department_id: data[0].id }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchOfficers = async () => {
     try {
@@ -39,6 +63,37 @@ export default function OfficersDashboard() {
     o.department?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleAddOfficer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    
+    try {
+      const token = Cookies.get('token');
+      const res = await fetch(`${API_URL}/admin/officers`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to create officer');
+      }
+      
+      setIsModalOpen(false);
+      setFormData({ full_name: '', email: '', password: '', department_id: departments.length > 0 ? departments[0].id : '' });
+      fetchOfficers(); // refresh list
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
@@ -48,6 +103,12 @@ export default function OfficersDashboard() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">Manage platform officers and their department assignments.</p>
         </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm flex items-center gap-2 transition-colors"
+        >
+          <Plus size={16} /> Add New Officer
+        </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -122,6 +183,100 @@ export default function OfficersDashboard() {
           </table>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <ShieldAlert className="text-blue-600" size={20} /> Add New Officer
+              </h2>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddOfficer} className="p-5 space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-lg border border-red-100">
+                  {error}
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  required
+                  value={formData.full_name}
+                  onChange={e => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Official Email</label>
+                <input 
+                  type="email" 
+                  required
+                  value={formData.email}
+                  onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="e.g. john.water@civicconnect.gov"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Temporary Password</label>
+                <input 
+                  type="password" 
+                  required
+                  minLength={6}
+                  value={formData.password}
+                  onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Assign Department</label>
+                <select 
+                  required
+                  value={formData.department_id}
+                  onChange={e => setFormData(prev => ({ ...prev, department_id: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {submitting ? <Loader2 size={18} className="animate-spin" /> : 'Create Officer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
