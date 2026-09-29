@@ -30,7 +30,8 @@ export default function CitizenDashboard() {
             description: c.description,
             address: `Lat: ${c.location_lat}, Lng: ${c.location_lng}`, // Basic mapping, can be improved with reverse geocoding
             lat: c.location_lat,
-            lng: c.location_lng
+            lng: c.location_lng,
+            media_urls: c.media_urls
           }));
           setComplaints(mapped);
         }
@@ -176,8 +177,8 @@ export default function CitizenDashboard() {
       {/* Complaint Detail Modal */}
       {selectedComplaint && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-start">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-start shrink-0">
               <div>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 mb-3 inline-flex
                   ${selectedComplaint.status === 'In Progress' ? 'bg-orange-100 text-orange-700' : ''}
@@ -199,7 +200,7 @@ export default function CitizenDashboard() {
               </button>
             </div>
             
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 overflow-y-auto">
               <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Category</h3>
                 <p className="font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{selectedComplaint.category || 'Unknown'}</p>
@@ -218,9 +219,18 @@ export default function CitizenDashboard() {
                   {selectedComplaint.address || (selectedComplaint.lat ? `Lat: ${selectedComplaint.lat.toFixed(4)}, Lng: ${selectedComplaint.lng.toFixed(4)}` : 'Location not provided')}
                 </p>
               </div>
+
+              {selectedComplaint.media_urls && selectedComplaint.media_urls.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Attached Image</h3>
+                  <div className="mt-2 rounded-lg overflow-hidden border border-gray-200">
+                    <img src={selectedComplaint.media_urls[0]} alt="Complaint Evidence" className="w-full h-auto object-cover max-h-64" />
+                  </div>
+                </div>
+              )}
             </div>
             
-            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end shrink-0">
               <button 
                 onClick={() => setSelectedComplaint(null)}
                 className="px-6 py-2 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 transition-colors"

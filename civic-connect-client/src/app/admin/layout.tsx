@@ -83,7 +83,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 ml-auto">
             <button className="relative text-gray-400 hover:text-gray-600">
               <Bell className="h-5 w-5" />
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />

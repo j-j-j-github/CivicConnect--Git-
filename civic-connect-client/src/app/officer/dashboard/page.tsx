@@ -642,15 +642,9 @@ export default function OfficerDashboard() {
                     <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Citizen Evidence</h3>
                     <div className="grid grid-cols-2 gap-2">
                       {selectedComplaint.media_urls.map((url, i) => (
-                        <a 
-                          key={i} 
-                          href={url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="block bg-gray-50 border border-gray-100 p-2.5 rounded-xl text-xs text-[#042B6B] font-bold truncate hover:underline"
-                        >
-                          🔗 Attachment {i + 1}
-                        </a>
+                        <div key={i} className="rounded-lg overflow-hidden border border-gray-200">
+                          <img src={url} alt={`Evidence ${i + 1}`} className="w-full h-auto object-cover max-h-64" />
+                        </div>
                       ))}
                     </div>
                   </div>

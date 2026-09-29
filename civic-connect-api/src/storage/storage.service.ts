@@ -1,26 +1,19 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 
 @Injectable()
 export class StorageService {
-  private s3Client: S3Client;
   private readonly logger = new Logger(StorageService.name);
-  private bucketName: string;
+  private readonly uploadDir = path.join(process.cwd(), 'uploads');
 
   constructor() {
-    this.bucketName = process.env.S3_BUCKET || 'civic-connect';
-    
-    this.s3Client = new S3Client({
-      endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
-      region: process.env.S3_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY || 'minioadmin',
-        secretAccessKey: process.env.S3_SECRET_KEY || 'minioadmin',
-      },
-      forcePathStyle: true, // Required for MinIO
-    });
+    // Ensure uploads directory exists
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
+    }
   }
 
   async uploadFile(file: Express.Multer.File): Promise<string> {
@@ -30,26 +23,17 @@ export class StorageService {
 
     const fileExtension = path.extname(file.originalname);
     const fileName = `${uuidv4()}${fileExtension}`;
+    const filePath = path.join(this.uploadDir, fileName);
 
     try {
-      await this.s3Client.send(
-        new PutObjectCommand({
-          Bucket: this.bucketName,
-          Key: fileName,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-          // ACL: 'public-read', // Depends on bucket config
-        }),
-      );
+      await fsPromises.writeFile(filePath, file.buffer);
 
-      // Return public URL
-      const publicUrl = process.env.S3_PUBLIC_URL 
-        ? `${process.env.S3_PUBLIC_URL}/${this.bucketName}/${fileName}`
-        : `${process.env.S3_ENDPOINT}/${this.bucketName}/${fileName}`;
-        
-      return publicUrl;
+      // Return public URL (assuming the backend serves it under /uploads/)
+      const port = process.env.PORT || 3001;
+      const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+      return `${baseUrl}/uploads/${fileName}`;
     } catch (error) {
-      this.logger.error(`Failed to upload file to S3: ${error.message}`);
+      this.logger.error(`Failed to upload file to disk: ${error.message}`);
       throw new BadRequestException('File upload failed');
     }
   }

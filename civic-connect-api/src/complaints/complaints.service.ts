@@ -247,7 +247,7 @@ export class ComplaintsService {
     // 4. Determine final department and priority
     let aiDepartmentName = aiResponse ? aiResponse.recommended_department : 'General';
     let department = await this.prisma.department.findFirst({
-      where: { name: aiDepartmentName }
+      where: { name: { contains: aiDepartmentName, mode: 'insensitive' } }
     });
 
     if (!department) {
