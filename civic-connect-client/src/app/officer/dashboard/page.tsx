@@ -159,6 +159,30 @@ export default function OfficerDashboard() {
     fetchInitialData();
   }, []);
 
+  const handleUpdateName = async () => {
+    const currentName = officerInfo?.full_name || officerInfo?.citizenProfile?.full_name || "";
+    const newName = window.prompt("Enter your full name:", currentName);
+    if (newName && newName.trim() !== "") {
+      try {
+        const res = await fetch(`${API_URL}/auth/profile`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ full_name: newName.trim() })
+        });
+        if (res.ok) {
+          setOfficerInfo((prev: any) => ({ ...prev, full_name: newName.trim() }));
+        } else {
+          alert('Failed to update name');
+        }
+      } catch(err) {
+        alert('Failed to update name');
+      }
+    }
+  };
+
   const refreshSelectedComplaint = async (complaintId: string) => {
     try {
       const res = await fetch(`${API_URL}/complaints/${complaintId}`, {
@@ -316,6 +340,13 @@ export default function OfficerDashboard() {
           <h1 className="text-2xl font-black tracking-tight uppercase">CivicConnect <span className="text-orange-400 font-bold text-lg">Department Portal</span></h1>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={handleUpdateName}
+            title="Edit Profile Name"
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors border border-white/20 flex items-center justify-center"
+          >
+            <User size={18} />
+          </button>
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -377,7 +408,7 @@ export default function OfficerDashboard() {
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-[#042B6B]/10 to-blue-50 border border-blue-100 p-8 rounded-3xl flex justify-between items-center shadow-sm">
           <div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Welcome Back, Officer</h2>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Welcome Back, {officerInfo?.full_name || officerInfo?.citizenProfile?.full_name || 'Officer'}</h2>
             <p className="text-gray-600 mt-2 font-medium">
               Department: <span className="text-[#042B6B] font-extrabold">{officerInfo?.department?.name || 'Loading...'}</span>
             </p>

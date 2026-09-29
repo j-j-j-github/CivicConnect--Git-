@@ -15,6 +15,7 @@ export default function CitizenLayout({
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [profileImageUrl, setProfileImageUrl] = useState('');
   const router = useRouter();
 
   const handleLogout = () => {
@@ -36,6 +37,15 @@ export default function CitizenLayout({
 
   useEffect(() => {
     loadNotifications();
+    const loadProfile = async () => {
+      try {
+        const data = await fetchApi('/citizens/profile');
+        if (data?.citizenProfile?.profile_image_url) {
+          setProfileImageUrl(data.citizenProfile.profile_image_url);
+        }
+      } catch (error) {}
+    };
+    loadProfile();
     // In a real app we'd use WebSockets/SSE for real-time updates.
     // For capstone, polling every 30s is acceptable if needed, but we'll stick to mount.
   }, []);
@@ -123,8 +133,11 @@ export default function CitizenLayout({
           )}
           
           <Link href="/citizen/profile" className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center border border-gray-300">
-            {/* Placeholder avatar */}
-            <UserCircle size={32} className="text-gray-400" />
+            {profileImageUrl ? (
+              <img src={profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <UserCircle size={32} className="text-gray-400" />
+            )}
           </Link>
           <button onClick={handleLogout} className="text-gray-500 hover:text-gray-900 transition-colors" title="Logout">
             <LogOut size={20} />
