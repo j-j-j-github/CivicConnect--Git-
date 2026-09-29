@@ -45,7 +45,7 @@ export default function Home() {
         className="flex-1 flex flex-col items-center justify-center p-8 lg:p-24 text-center relative bg-cover bg-center"
         style={{ backgroundImage: "url('/smartcity.jpg')" }}
       >
-        <div className="max-w-4xl w-full space-y-8 relative z-10 p-8 bg-white/40 backdrop-blur-md rounded-3xl border border-white/50 shadow-xl">
+        <div className="max-w-4xl w-full space-y-8 relative z-10 p-8 bg-white/75 backdrop-blur-md rounded-3xl border border-white/50 shadow-xl">
           <h2 className="text-5xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1]">
             Empowering Citizens for a <span className="text-[#042B6B]">Smarter City</span>
           </h2>

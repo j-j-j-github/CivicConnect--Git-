@@ -49,8 +49,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f8f9fa] px-4 font-sans py-12">
-      <div className="w-full max-w-[420px] rounded-3xl bg-white p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col items-center">
+    <div 
+      className="flex min-h-screen items-center justify-center px-4 font-sans py-12 bg-cover bg-center"
+      style={{ backgroundImage: "url('/smartcity.jpg')" }}
+    >
+      <div className="w-full max-w-[420px] rounded-3xl bg-white/75 backdrop-blur-md p-8 md:p-10 shadow-2xl border border-white/50 flex flex-col items-center">
         
         {/* Custom Logo */}
         <div className="mb-4 relative">

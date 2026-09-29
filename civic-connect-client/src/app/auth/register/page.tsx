@@ -56,8 +56,11 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl text-center">
+      <div 
+        className="flex min-h-screen items-center justify-center px-4 bg-cover bg-center"
+        style={{ backgroundImage: "url('/smartcity.jpg')" }}
+      >
+        <div className="w-full max-w-md space-y-8 rounded-3xl bg-white/75 backdrop-blur-md p-8 shadow-2xl text-center border border-white/50">
           <h2 className="text-2xl font-bold text-green-600">Registration Successful!</h2>
           <p className="text-gray-600">Redirecting to login...</p>
         </div>
@@ -66,8 +69,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl">
+    <div 
+      className="flex min-h-screen items-center justify-center px-4 py-12 bg-cover bg-center"
+      style={{ backgroundImage: "url('/smartcity.jpg')" }}
+    >
+      <div className="w-full max-w-md space-y-8 rounded-3xl bg-white/75 backdrop-blur-md p-8 shadow-2xl border border-white/50">
         <div className="text-center flex flex-col items-center">
           <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center shadow-md mb-4">
             <span className="text-white font-bold text-3xl">C</span>
