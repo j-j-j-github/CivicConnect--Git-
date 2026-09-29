@@ -8,10 +8,6 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <span>CIVICCONNECT OFFICIAL PLATFORM</span>
         </div>
-        <div className="hidden sm:flex gap-6">
-          <Link href="#" className="hover:text-blue-200 transition-colors">Contact Us</Link>
-          <Link href="#" className="hover:text-blue-200 transition-colors">Language: EN</Link>
-        </div>
       </div>
 
       {/* Main Navigation */}
