@@ -105,7 +105,7 @@ export default function RegisterPage() {
                 id="fullName"
                 type="text"
                 required
-                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 shadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#000000]"
+                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 text-black shadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#000000]"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
@@ -119,7 +119,7 @@ export default function RegisterPage() {
                 id="email"
                 type="email"
                 required
-                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 shadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
+                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 text-black shadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -134,7 +134,7 @@ export default function RegisterPage() {
                 type="password"
                 required
                 minLength={6}
-                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 shadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
+                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 text-black shadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                 type="password"
                 required
                 minLength={6}
-                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 shadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
+                className="mt-1 block w-full rounded-md border border-gray-900 px-3 py-2 text-blackshadow-sm focus:border-[#1E3A8A] focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
