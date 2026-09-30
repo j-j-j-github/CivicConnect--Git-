@@ -12,6 +12,7 @@ import { MailModule } from './mail/mail.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { AdminModule } from './admin/admin.module';
 
+
 @Module({
   imports: [PrismaModule, AuthModule, CitizensModule, StorageModule, ComplaintsModule, FeedbackModule, NotificationsModule, MailModule, DepartmentsModule, AdminModule],
   controllers: [AppController],
